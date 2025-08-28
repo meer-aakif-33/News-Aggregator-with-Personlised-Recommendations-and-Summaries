@@ -11,41 +11,42 @@ export default function MainNewsPage() {
   const storedGenres = JSON.parse(localStorage.getItem("selectedGenres")) || [];
   const selectedGenres = location.state?.selectedGenres || storedGenres;
 
-  useEffect(() => {
-    if (hasFetched.current) return; // Prevent re-fetching
+useEffect(() => {
+  if (hasFetched.current) return;
 
-    const fetchNews = async () => {
-      const apiKey = "01b9aacf474d4fd789819e84da3a815b"; // Replace with your News API key
-      let url = "";
+  const fetchNews = async () => {
+    try {
+      let query = "";
 
-      if (selectedGenres.length === 0) {
-        console.log("No genres selected. Fetching top headlines.");
-        url = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${apiKey}`;
+      if (selectedGenres.length > 0) {
+        query = selectedGenres.map(keyword => encodeURIComponent(keyword)).join("+");
+      }
+
+      const backendUrl = "https://your-backend.vercel.app"; // replace with real backend URL
+      const apiUrl = query
+        ? `${backendUrl}/api/news?q=${query}`
+        : `${backendUrl}/api/news`;
+
+      console.log("Fetching news from backend:", apiUrl);
+
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+
+      if (data.articles) {
+        setNewsData(data.articles);
+        hasFetched.current = true;
       } else {
-        const query = selectedGenres.map(keyword => encodeURIComponent(keyword)).join("+");
-        url = `https://newsapi.org/v2/everything?q=${query}&apiKey=${apiKey}`;
+        console.error("No articles found:", data);
+        setNewsData([]);
       }
+    } catch (error) {
+      console.error("Error fetching news data:", error);
+    }
+  };
 
-      console.log("Fetching news from:", url);
+  fetchNews();
+}, [selectedGenres]);
 
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.articles) {
-          setNewsData(data.articles);
-          hasFetched.current = true; // Mark as fetched
-        } else {
-          console.error("No articles found:", data);
-          setNewsData([]);
-        }
-      } catch (error) {
-        console.error("Error fetching news data:", error);
-      }
-    };
-
-    fetchNews();
-  }, [selectedGenres]);
 
 
   return (
