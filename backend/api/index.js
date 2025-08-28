@@ -15,6 +15,10 @@ const NEWS_API_KEY = process.env.NEWS_API_KEY;
 app.use(cors());
 //console.log("JWT_SECRET:", JWT_SECRET);
 
+app.get("/", (req, res) => {
+  res.send("Backend is running ✅");
+});
+
 app.get("/api/news", async (req, res) => {
   //const apiKey = "01b9aacf474d4fd789819e84da3a815b"; // Replace with your News API key
   const query = req.query.q || "Science+Health+education"; // default if nothing passed
@@ -146,10 +150,6 @@ const authMiddleware = (req, res, next) => {
   });
 };
 
-app.get("/", (req, res) => {
-  res.send("Backend is running ✅");
-});
-
 
 // Secure Scrape Endpoint (Requires Authentication)
 app.get("/scrape", authMiddleware, async (req, res) => {
@@ -200,4 +200,4 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Export Express app wrapped for Vercel serverless
-export const handler = serverless(app);
+module.exports = app; // no app.listen()
