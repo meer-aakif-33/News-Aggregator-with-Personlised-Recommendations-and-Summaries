@@ -29,7 +29,6 @@ dist-ssr
 # Node.js (for frontend and backend if using Node)
 node_modules/
 .env
-package-lock.json
 dist/
 build/
 backend/node_modules/
