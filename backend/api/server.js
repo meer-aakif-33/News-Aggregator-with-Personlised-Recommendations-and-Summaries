@@ -4,7 +4,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken"; // Import JWT for token verification
 import fs from "fs"
-import fetch from node-fetch;
 dotenv.config();
 
 const app = express();
