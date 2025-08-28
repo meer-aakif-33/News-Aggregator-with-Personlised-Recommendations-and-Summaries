@@ -264,8 +264,8 @@ import fs from "fs";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5003;
-const JWT_SECRET = process.env.JWT_SECRET || "aslhbuhbgguhj83rgye76grjhb";
+const PORT = 5003;
+const JWT_SECRET = "aslhbuhbgguhj83rgye76grjhb";
 
 // Middleware
 app.use(express.json());
@@ -273,7 +273,7 @@ app.use(cors());
 
 // News API Route
 app.get("/api/news", async (req, res) => {
-  const apiKey = process.env.NEWS_API_KEY || "01b9aacf474d4fd789819e84da3a815b";
+  const apiKey = "01b9aacf474d4fd789819e84da3a815b";
   const query = req.query.q || "Science+Health+education";
 
   const url = query
