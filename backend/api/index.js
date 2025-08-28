@@ -168,9 +168,6 @@ app.post("/get-recommendations", async (req, res) => {
 
 });
 
-if (process.env.NODE_ENV !== "production") {
-  app.listen(5003, () => console.log("Server running on http://localhost:5003"));
-}
 
 // 🚀 Export ONLY the app (no app.listen!)
 export default app;
