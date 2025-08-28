@@ -117,7 +117,7 @@ export default function NewsArticlePage() {
     try {
       const summaryResponse = await fetch("http://localhost:5003/summarize", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },  
         body: JSON.stringify({ text: fullContent }),
       });
 
