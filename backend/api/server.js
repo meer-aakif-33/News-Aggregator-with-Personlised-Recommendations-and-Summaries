@@ -57,6 +57,152 @@ const writeUsers = (users) => {
   fs.writeFileSync("users.json", JSON.stringify(users, null, 2));
 };
 
+
+// Auth middleware
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "No token provided" });
+  
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ error: "Invalid token" });
+    req.user = decoded;
+    next();
+  });
+};
+// ================= SIGNUP =================
+app.post("/signup", async (req, res) => {
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password)
+    return res.status(400).json({ error: "All fields are required" });
+  
+  try {
+    // Check existing user
+    const existing = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (existing.rows.length > 0)
+      return res.status(400).json({ error: "User already exists" });
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert new user
+    const result = await pool.query(
+      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email",
+      [name, email, hashedPassword]
+    );
+    
+    const newUser = result.rows[0];
+    const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: "1h" });
+    
+    res.status(201).json({ token, name: newUser.name, email: newUser.email });
+  } catch (error) {
+    console.error("Signup Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// ================= LOGIN =================
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  
+  if (!email || !password)
+    return res.status(400).json({ error: "Email and password required" });
+  
+  try {
+    const userRes = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    const user = userRes.rows[0];
+    
+    if (!user) return res.status(401).json({ error: "Invalid email or password" });
+    
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) return res.status(401).json({ error: "Invalid email or password" });
+    
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+    
+    res.json({ token, name: user.name, email: user.email });
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+// Scrape route (protected)
+app.get("/scrape", authMiddleware, async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: "URL parameter is required." });
+
+  try {
+    const response = await axios.get(url);
+    const { JSDOM } = await import("jsdom");
+    const { Readability } = await import("@mozilla/readability");
+    
+    const dom = new JSDOM(response.data, { url });
+    const reader = new Readability(dom.window.document);
+    const article = reader.parse();
+    
+    if (article?.textContent) res.json({ content: article.textContent });
+    else res.status(400).json({ error: "Unable to extract article content." });
+  } catch (error) {
+    console.error("Scrape error:", error);
+    res.status(500).json({ error: "Failed to load article." });
+  }
+});
+
+// Summarization Endpoint (No Authentication Required)
+app.post("/summarize", async (req, res) => {
+  const { text } = req.body;
+  
+  if (!text || typeof text !== "string") {
+    return res.status(400).json({ error: "Valid text parameter is required." });
+  }
+  
+  try {
+    const pythonResponse = await axios.post(
+      "http://localhost:5002/summarize",
+      { text },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );    
+
+    if (pythonResponse.data.summary) {
+      res.json({ summary: pythonResponse.data.summary });
+    } else {
+      res.status(500).json({ error: "Failed to generate summary." });
+    }
+  } catch (error) {
+    console.error("Error during summarization:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to generate summary." });
+  }
+});
+
+//NewsAPI Route
+app.post("/get-recommendations", async (req, res) => {
+  try {
+    //console.log("🔍 Incoming Request Body:", JSON.stringify(req.body, null, 2));
+    
+    const { articles, title } = req.body;
+    
+    if (!articles || !title) {
+      return res.status(400).json({ error: "Missing articles or title" });
+    }
+    
+    //console.log("📤 Sending to Python API:", JSON.stringify({ articles, title }, null, 2));
+    
+    const response = await axios.post("http://localhost:5001/recommend", { articles, title });
+    
+    // console.log("✅ Response from Python API:", response.data);
+    res.json(response.data);
+  } catch (error) {
+    console.error("❌ Error fetching recommendations:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to get recommendations", details: error.response?.data });
+  }
+  
+
+});
+
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 // Signup
 // app.post("/signup", (req, res) => {
 //   const { name, email, password } = req.body;
@@ -90,152 +236,6 @@ const writeUsers = (users) => {
 //   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
 //   res.json({ token, name: user.name, email: user.email });
 // });
-
-// Auth middleware
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "No token provided" });
-
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ error: "Invalid token" });
-    req.user = decoded;
-    next();
-  });
-};
-// ================= SIGNUP =================
-app.post("/signup", async (req, res) => {
-  const { name, email, password } = req.body;
-
-  if (!name || !email || !password)
-    return res.status(400).json({ error: "All fields are required" });
-
-  try {
-    // Check existing user
-    const existing = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    if (existing.rows.length > 0)
-      return res.status(400).json({ error: "User already exists" });
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Insert new user
-    const result = await pool.query(
-      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email",
-      [name, email, hashedPassword]
-    );
-
-    const newUser = result.rows[0];
-    const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: "1h" });
-
-    res.status(201).json({ token, name: newUser.name, email: newUser.email });
-  } catch (error) {
-    console.error("Signup Error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-// ================= LOGIN =================
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password)
-    return res.status(400).json({ error: "Email and password required" });
-
-  try {
-    const userRes = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    const user = userRes.rows[0];
-
-    if (!user) return res.status(401).json({ error: "Invalid email or password" });
-
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) return res.status(401).json({ error: "Invalid email or password" });
-
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
-
-    res.json({ token, name: user.name, email: user.email });
-  } catch (error) {
-    console.error("Login Error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-  // Scrape route (protected)
-  app.get("/scrape", authMiddleware, async (req, res) => {
-    const { url } = req.query;
-    if (!url) return res.status(400).json({ error: "URL parameter is required." });
-  
-    try {
-      const response = await axios.get(url);
-      const { JSDOM } = await import("jsdom");
-      const { Readability } = await import("@mozilla/readability");
-  
-      const dom = new JSDOM(response.data, { url });
-      const reader = new Readability(dom.window.document);
-      const article = reader.parse();
-  
-      if (article?.textContent) res.json({ content: article.textContent });
-      else res.status(400).json({ error: "Unable to extract article content." });
-    } catch (error) {
-      console.error("Scrape error:", error);
-      res.status(500).json({ error: "Failed to load article." });
-    }
-  });
-});
-
-// Summarization Endpoint (No Authentication Required)
-app.post("/summarize", async (req, res) => {
-  const { text } = req.body;
-
-  if (!text || typeof text !== "string") {
-    return res.status(400).json({ error: "Valid text parameter is required." });
-  }
-
-  try {
-    const pythonResponse = await axios.post(
-      "http://localhost:5002/summarize",
-      { text },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );    
-
-    if (pythonResponse.data.summary) {
-      res.json({ summary: pythonResponse.data.summary });
-    } else {
-      res.status(500).json({ error: "Failed to generate summary." });
-    }
-  } catch (error) {
-    console.error("Error during summarization:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to generate summary." });
-  }
-});
-
-//NewsAPI Route
-app.post("/get-recommendations", async (req, res) => {
-  try {
-    //console.log("🔍 Incoming Request Body:", JSON.stringify(req.body, null, 2));
-
-    const { articles, title } = req.body;
-
-    if (!articles || !title) {
-      return res.status(400).json({ error: "Missing articles or title" });
-    }
-
-    //console.log("📤 Sending to Python API:", JSON.stringify({ articles, title }, null, 2));
-
-    const response = await axios.post("http://localhost:5001/recommend", { articles, title });
-    
-    // console.log("✅ Response from Python API:", response.data);
-    res.json(response.data);
-  } catch (error) {
-    console.error("❌ Error fetching recommendations:", error.response?.data || error.message);
-    res.status(500).json({ error: "Failed to get recommendations", details: error.response?.data });
-  }
-
-
-});
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 // 🚀 Export ONLY the app (no app.listen!)
 //export default app;
