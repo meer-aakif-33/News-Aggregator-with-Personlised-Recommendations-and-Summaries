@@ -8,21 +8,22 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5003;
-const JWT_SECRET = "aslhbuhbgguhj83rgye76grjhb"; // Replace with a strong secret key
+const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret"; 
+const NEWS_API_KEY = process.env.NEWS_API_KEY;
 app.use(cors());
 //console.log("JWT_SECRET:", JWT_SECRET);
 
 app.get("/api/news", async (req, res) => {
-  const apiKey = "01b9aacf474d4fd789819e84da3a815b"; // Replace with your News API key
+  //const apiKey = "01b9aacf474d4fd789819e84da3a815b"; // Replace with your News API key
   const query = req.query.q || "Science+Health+education"; // default if nothing passed
 
   const url = query
-    ? `https://newsapi.org/v2/everything?q=${query}&apiKey=${apiKey}`
+    ? `https://newsapi.org/v2/everything?q=${query}&apiKey=${NEWS_API_KEY}`
     : `https://newsapi.org/v2/top-headlines?country=us&apiKey=${apiKey}`;
 
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    const response = await axios.get(url);
+    const data = response.data; 
     res.json(data);
   } catch (error) {
     console.error("News API error:", error);
