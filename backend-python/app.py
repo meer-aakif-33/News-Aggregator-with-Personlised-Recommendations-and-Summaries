@@ -8,5 +8,10 @@ app = Flask(__name__)
 app.register_blueprint(summarize_bp)
 app.register_blueprint(recommend_bp)
 
+@app.route('/')
+def home():
+    return "Python backend is running!"
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Set debug=False for production
+    app.run(host="0.0.0.0", port=5000, debug=False)
