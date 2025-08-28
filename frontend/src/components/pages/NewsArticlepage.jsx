@@ -115,7 +115,7 @@ export default function NewsArticlePage() {
     setIsSummarizing(true);
 
     try {
-      const summaryResponse = await fetch("https://news-aggregator-backend-three.vercel.app/summarize", {
+      const summaryResponse = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com", {
         method: "POST",
         headers: { "Content-Type": "application/json" },  
         body: JSON.stringify({ text: fullContent }),

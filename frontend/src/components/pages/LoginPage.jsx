@@ -19,51 +19,55 @@ export default function LoginSignupPage({ setIsAuthenticated }) {
     }
   }, []);
 
-  const handleSignup = async (event) => {
-    event.preventDefault();
+const handleSignup = async (event) => {
+  event.preventDefault();
 
-    if (!name || !email || !password) {
-      console.error("All fields are required");
+  if (!name || !email || !password) {
+    alert("All fields are required");
+    return;
+  }
+
+  try {
+    const response = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    const contentType = response.headers.get("content-type") || "";
+    let data = {};
+    if (contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      console.error("Server returned non-JSON response:", await response.text());
       return;
     }
 
-    try {
-      const response = await fetch("https://news-aggregator-backend-three.vercel.app/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert("User already exists, please try different credentials ");
-        console.error("Signup failed:", data.message || "Unknown error");
-        return;
-      }
-
-      console.log("Server response:", data); // Debugging line
-
-      localStorage.setItem("authToken", data.token);
-      localStorage.setItem("userName", name); // Store name
-      localStorage.setItem("userEmail", email); // Store email
-
-      if (typeof setIsAuthenticated === "function") {
-        setIsAuthenticated(true);
-        navigate("/preferences");
-      } else {
-        console.error("setIsAuthenticated is not a function");
-      }
-    } catch (error) {
-      alert("User already exists");
-      console.error("Signup error:", error);
+    if (!response.ok) {
+      alert(data.error || "Signup failed");
+      console.error("Signup failed:", data.error || data);
+      return;
     }
-  };
+
+    // Save token and user info
+    localStorage.setItem("authToken", data.token);
+    localStorage.setItem("userName", name);
+    localStorage.setItem("userEmail", email);
+
+    if (typeof setIsAuthenticated === "function") {
+      setIsAuthenticated(true);
+      navigate("/preferences");
+    }
+  } catch (error) {
+    console.error("Signup error:", error);
+    alert("Something went wrong during signup");
+  }
+};
 
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch("https://news-aggregator-backend-three.vercel.app/login", {
+      const response = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -220,7 +224,7 @@ export default function LoginSignupPage({ setIsAuthenticated }) {
 //     }
   
 //     try {
-//       const response = await fetch("https://news-aggregator-backend-three.vercel.app/signup", {
+//       const response = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com", {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({ name, email, password }),
@@ -252,7 +256,7 @@ export default function LoginSignupPage({ setIsAuthenticated }) {
 //   const handleLogin = async (event) => {
 //     event.preventDefault();
 //     try {
-//       const response = await fetch("https://news-aggregator-backend-three.vercel.app/login", {
+//       const response = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com//login", {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({ email, password }),
