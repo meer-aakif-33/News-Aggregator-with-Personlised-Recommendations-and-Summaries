@@ -4,6 +4,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import fs from "fs";
+import pg from "pg";
+import bcrypt from "bcrypt";
 
 dotenv.config();
 
@@ -14,6 +16,14 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+
+// PostgreSQL client
+const { Pool } = pg;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, // Render DB URL
+  ssl: { rejectUnauthorized: false }         // Required on Render
+});
 
 // Root
 app.get("/", (req, res) => {
@@ -48,50 +58,106 @@ const writeUsers = (users) => {
 };
 
 // Signup
-app.post("/signup", (req, res) => {
+// app.post("/signup", (req, res) => {
+//   const { name, email, password } = req.body;
+//   let users = readUsers();
+
+//   if (!name || !email || !password) {
+//     return res.status(400).json({ error: "All fields are required" });
+//   }
+//   if (users.find((u) => u.email === email)) {
+//     return res.status(400).json({ error: "User already exists" });
+//   }
+
+//   const newUser = { id: users.length + 1, name, email, password };
+//   users.push(newUser);
+//   writeUsers(users);
+
+//   const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: "1h" });
+//   res.status(201).json({ token });
+// });
+
+// // Login
+// app.post("/login", (req, res) => {
+//   const { email, password } = req.body;
+//   let users = readUsers();
+
+//   const user = users.find((u) => u.email === email && u.password === password);
+//   if (!user) {
+//     return res.status(401).json({ error: "Invalid email or password" });
+//   }
+
+//   const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+//   res.json({ token, name: user.name, email: user.email });
+// });
+
+// // Auth middleware
+// const authMiddleware = (req, res, next) => {
+//   const token = req.headers.authorization?.split(" ")[1];
+//   if (!token) return res.status(401).json({ error: "No token provided" });
+
+//   jwt.verify(token, JWT_SECRET, (err, decoded) => {
+//     if (err) return res.status(401).json({ error: "Invalid token" });
+//     req.user = decoded;
+//     next();
+//   });
+// };
+// ================= SIGNUP =================
+app.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
-  let users = readUsers();
 
-  if (!name || !email || !password) {
+  if (!name || !email || !password)
     return res.status(400).json({ error: "All fields are required" });
-  }
-  if (users.find((u) => u.email === email)) {
-    return res.status(400).json({ error: "User already exists" });
-  }
 
-  const newUser = { id: users.length + 1, name, email, password };
-  users.push(newUser);
-  writeUsers(users);
+  try {
+    // Check existing user
+    const existing = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    if (existing.rows.length > 0)
+      return res.status(400).json({ error: "User already exists" });
 
-  const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: "1h" });
-  res.status(201).json({ token });
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert new user
+    const result = await pool.query(
+      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email",
+      [name, email, hashedPassword]
+    );
+
+    const newUser = result.rows[0];
+    const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: "1h" });
+
+    res.status(201).json({ token, name: newUser.name, email: newUser.email });
+  } catch (error) {
+    console.error("Signup Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 });
 
-// Login
-app.post("/login", (req, res) => {
+// ================= LOGIN =================
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  let users = readUsers();
 
-  const user = users.find((u) => u.email === email && u.password === password);
-  if (!user) {
-    return res.status(401).json({ error: "Invalid email or password" });
+  if (!email || !password)
+    return res.status(400).json({ error: "Email and password required" });
+
+  try {
+    const userRes = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    const user = userRes.rows[0];
+
+    if (!user) return res.status(401).json({ error: "Invalid email or password" });
+
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) return res.status(401).json({ error: "Invalid email or password" });
+
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+
+    res.json({ token, name: user.name, email: user.email });
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
-
-  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
-  res.json({ token, name: user.name, email: user.email });
 });
-
-// Auth middleware
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "No token provided" });
-
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ error: "Invalid token" });
-    req.user = decoded;
-    next();
-  });
-};
 
 // Scrape route (protected)
 app.get("/scrape", authMiddleware, async (req, res) => {

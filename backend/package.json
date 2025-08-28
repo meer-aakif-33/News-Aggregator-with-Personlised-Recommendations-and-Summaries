@@ -14,12 +14,13 @@
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
     "axios": "^1.7.9",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsdom": "^26.0.0",
     "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3",
     "serverless-http": "^3.2.0"
-
   }
 }
