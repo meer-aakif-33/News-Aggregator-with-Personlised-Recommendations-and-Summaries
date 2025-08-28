@@ -164,7 +164,13 @@ app.post("/get-recommendations", async (req, res) => {
     console.error("❌ Error fetching recommendations:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to get recommendations", details: error.response?.data });
   }
+
+
 });
+
+if (process.env.NODE_ENV !== "production") {
+  app.listen(5003, () => console.log("Server running on http://localhost:5003"));
+}
 
 // 🚀 Export ONLY the app (no app.listen!)
 export default app;
