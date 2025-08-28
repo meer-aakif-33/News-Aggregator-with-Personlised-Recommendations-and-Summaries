@@ -91,17 +91,17 @@ const writeUsers = (users) => {
 //   res.json({ token, name: user.name, email: user.email });
 // });
 
-// // Auth middleware
-// const authMiddleware = (req, res, next) => {
-//   const token = req.headers.authorization?.split(" ")[1];
-//   if (!token) return res.status(401).json({ error: "No token provided" });
+// Auth middleware
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "No token provided" });
 
-//   jwt.verify(token, JWT_SECRET, (err, decoded) => {
-//     if (err) return res.status(401).json({ error: "Invalid token" });
-//     req.user = decoded;
-//     next();
-//   });
-// };
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ error: "Invalid token" });
+    req.user = decoded;
+    next();
+  });
+};
 // ================= SIGNUP =================
 app.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
@@ -157,29 +157,29 @@ app.post("/login", async (req, res) => {
     console.error("Login Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
+  // Scrape route (protected)
+  app.get("/scrape", authMiddleware, async (req, res) => {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ error: "URL parameter is required." });
+  
+    try {
+      const response = await axios.get(url);
+      const { JSDOM } = await import("jsdom");
+      const { Readability } = await import("@mozilla/readability");
+  
+      const dom = new JSDOM(response.data, { url });
+      const reader = new Readability(dom.window.document);
+      const article = reader.parse();
+  
+      if (article?.textContent) res.json({ content: article.textContent });
+      else res.status(400).json({ error: "Unable to extract article content." });
+    } catch (error) {
+      console.error("Scrape error:", error);
+      res.status(500).json({ error: "Failed to load article." });
+    }
+  });
 });
 
-// Scrape route (protected)
-app.get("/scrape", authMiddleware, async (req, res) => {
-  const { url } = req.query;
-  if (!url) return res.status(400).json({ error: "URL parameter is required." });
-
-  try {
-    const response = await axios.get(url);
-    const { JSDOM } = await import("jsdom");
-    const { Readability } = await import("@mozilla/readability");
-
-    const dom = new JSDOM(response.data, { url });
-    const reader = new Readability(dom.window.document);
-    const article = reader.parse();
-
-    if (article?.textContent) res.json({ content: article.textContent });
-    else res.status(400).json({ error: "Unable to extract article content." });
-  } catch (error) {
-    console.error("Scrape error:", error);
-    res.status(500).json({ error: "Failed to load article." });
-  }
-});
 // Summarization Endpoint (No Authentication Required)
 app.post("/summarize", async (req, res) => {
   const { text } = req.body;
