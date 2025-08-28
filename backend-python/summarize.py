@@ -1,10 +1,12 @@
 from flask import Blueprint, request, jsonify
-from transformers import pipeline
+import os
+import requests
 
 summarize_bp = Blueprint("summarize", __name__)
+HF_API_KEY = os.getenv("HF_API_KEY")
 
-# Smaller model for lightweight deployment
-summarizer = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
+API_URL = "https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6"
+HEADERS = {"Authorization": f"Bearer {HF_API_KEY}"}
 
 @summarize_bp.route("/summarize", methods=["POST"])
 def summarize():
@@ -15,7 +17,10 @@ def summarize():
         return jsonify({"error": "Valid text parameter is required."}), 400
 
     try:
-        summary_result = summarizer(text, max_length=130, min_length=60, do_sample=False)
-        return jsonify({"summary": summary_result[0]["summary_text"]})
+        payload = {"inputs": text, "parameters": {"max_length": 130, "min_length": 60}}
+        response = requests.post(API_URL, headers=HEADERS, json=payload, timeout=30)
+        response.raise_for_status()
+        summary = response.json()[0]["summary_text"]
+        return jsonify({"summary": summary})
     except Exception as e:
         return jsonify({"error": f"Summarization failed: {str(e)}"}), 500
