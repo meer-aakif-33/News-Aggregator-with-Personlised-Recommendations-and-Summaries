@@ -120,7 +120,6 @@ export default function NewsArticlePage() {
         headers: { "Content-Type": "application/json" },  
         body: JSON.stringify({ text: fullContent }),
       });
-x
       if (!summaryResponse.ok) {
         const errorText = await summaryResponse.text();
         console.error("DEBUG: Error generating summary:", errorText);

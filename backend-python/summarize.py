@@ -4,7 +4,7 @@ import requests
 
 summarize_bp = Blueprint("summarize", __name__)
 HF_API_KEY = os.getenv("HF_API_KEY")
-
+print("API_KEY_IS:", HF_API_KEY)
 API_URL = "https://api-inference.huggingface.co/models/sshleifer/distilbart-cnn-12-6"
 HEADERS = {"Authorization": f"Bearer {HF_API_KEY}"}
 
