@@ -1,6 +1,13 @@
-// backend/api/db.js
-import postgres from 'postgres';
+    import postgres from 'postgres';
+    import dotenv from 'dotenv';
 
-const sql = postgres(process.env.DATABASE_URL);
+    dotenv.config();  // Make sure .env is loaded
 
-export default sql;
+    // Read the connection string from your environment variable
+    const connectionString = process.env.DATABASE_URL;
+
+    // Initialize the client
+    // If using Supabase online, it automatically handles SSL
+    const sql = postgres(connectionString);
+
+    export default sql;
