@@ -1,5 +1,8 @@
 {
-  "builds": [
-    { "src": "backend/api/server.js", "use": "@vercel/node" }
-  ]
+  "version": 2,
+  "functions": {
+    "api/index.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
