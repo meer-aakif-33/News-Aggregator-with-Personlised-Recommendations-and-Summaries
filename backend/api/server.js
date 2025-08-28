@@ -165,7 +165,7 @@ app.post("/summarize", async (req, res) => {
   
   try {
     const pythonResponse = await axios.post(
-      "http://localhost:5002/summarize",
+      "https://news-aggregator-with-personlised-g3ky.onrender.com/summarize",
       { text },
       {
         headers: {
@@ -198,7 +198,7 @@ app.post("/get-recommendations", async (req, res) => {
     
     //console.log("📤 Sending to Python API:", JSON.stringify({ articles, title }, null, 2));
     
-    const response = await axios.post("http://localhost:5001/recommend", { articles, title });
+    const response = await axios.post("https://news-aggregator-with-personlised-g3ky.onrender.com/recommend", { articles, title });
     
     // console.log("✅ Response from Python API:", response.data);
     res.json(response.data);
