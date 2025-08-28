@@ -38,6 +38,22 @@ app.get("/api/news", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch news" });
   }
 });
+// Trending News API route
+app.get("/api/trending-news", async (req, res) => {
+  // You can adjust country or category as needed
+  const country = req.query.country || "us"; // default to US
+  const pageSize = req.query.limit || 30;   // number of articles to return
+
+  const url = `https://newsapi.org/v2/top-headlines?country=${country}&pageSize=${pageSize}&apiKey=${NEWS_API_KEY}`;
+
+  try {
+    const response = await axios.get(url);
+    res.json(response.data); // send the full response including "articles"
+  } catch (error) {
+    console.error("Trending News API error:", error.message);
+    res.status(500).json({ error: "Failed to fetch trending news" });
+  }
+});
 
 // Auth middleware
 const authMiddleware = (req, res, next) => {

@@ -8,19 +8,27 @@ export default function TrendingNewsPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const apiUrl =  
-      "https://newsapi.org/v2/top-headlines?country=us&apiKey=6599ec9ad7954716bae76c2c1c52e01d";
+    const fetchTrendingNews = async () => {
+      try {
+        const backendUrl = "https://news-aggregator-with-personlised-qq5i.onrender.com";
+        const apiUrl = `${backendUrl}/api/trending-news`;
 
-    fetch(apiUrl)
-      .then((response) => response.json())
-      .then((data) => {
-        setNewsData(data.articles.slice(0, 30));
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data.articles) {
+          setNewsData(data.articles);
+        } else {
+          setError("No trending articles found");
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
         setLoading(false);
-      })
-      .catch((error) => {
-        setError(error.message);
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchTrendingNews();
   }, []);
 
   if (loading) return <div className="trend-loading">Loading...</div>;
