@@ -57,7 +57,7 @@ export default function NewsArticlePage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:5003/scrape?url=${encodeURIComponent(url)}`, {
+      const response = await fetch(`https://news-aggregator-with-personlised-re.vercel.app/scrape?url=${encodeURIComponent(url)}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -79,7 +79,7 @@ export default function NewsArticlePage() {
         setFullContent(data.content);
         // Trigger fakeness prediction
         // try {
-        //   const predictionResponse = await fetch("http://localhost:5003/predict-fakeness", {
+        //   const predictionResponse = await fetch("https://news-aggregator-with-personlised-re.vercel.app/predict-fakeness", {
         //     method: "POST",
         //     headers: { "Content-Type": "application/json" },
         //     body: JSON.stringify({ text: data.content }),
@@ -115,7 +115,7 @@ export default function NewsArticlePage() {
     setIsSummarizing(true);
 
     try {
-      const summaryResponse = await fetch("http://localhost:5003/summarize", {
+      const summaryResponse = await fetch("https://news-aggregator-with-personlised-re.vercel.app/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: fullContent }),
@@ -148,7 +148,7 @@ export default function NewsArticlePage() {
     // }, null, 2));
 
     try {
-      const response = await axios.post("http://localhost:5003/get-recommendations", {
+      const response = await axios.post("https://news-aggregator-with-personlised-re.vercel.app/get-recommendations", {
         articles: allArticles,
         title: article.title,
       });
