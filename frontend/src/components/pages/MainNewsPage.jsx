@@ -23,7 +23,7 @@ useEffect(() => {
         query = selectedGenres.map(keyword => encodeURIComponent(keyword)).join("+");
       }
 
-      const backendUrl = "http://localhost:5003"; // replace with real backend URL
+      const backendUrl = "https://news-aggregator-backend-three.vercel.app"; // replace with real backend URL
       const apiUrl = query
         ? `${backendUrl}/api/news?q=${query}`
         : `${backendUrl}/api/news`;

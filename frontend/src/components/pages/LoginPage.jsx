@@ -28,7 +28,7 @@ export default function LoginSignupPage({ setIsAuthenticated }) {
     }
 
     try {
-      const response = await fetch("http://localhost:5003/signup", {
+      const response = await fetch("https://news-aggregator-backend-three.vercel.app/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
@@ -63,7 +63,7 @@ export default function LoginSignupPage({ setIsAuthenticated }) {
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch("http://localhost:5003/login", {
+      const response = await fetch("https://news-aggregator-backend-three.vercel.app/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -220,7 +220,7 @@ export default function LoginSignupPage({ setIsAuthenticated }) {
 //     }
   
 //     try {
-//       const response = await fetch("http://localhost:5003/signup", {
+//       const response = await fetch("https://news-aggregator-backend-three.vercel.app/signup", {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({ name, email, password }),
@@ -252,7 +252,7 @@ export default function LoginSignupPage({ setIsAuthenticated }) {
 //   const handleLogin = async (event) => {
 //     event.preventDefault();
 //     try {
-//       const response = await fetch("http://localhost:5003/login", {
+//       const response = await fetch("https://news-aggregator-backend-three.vercel.app/login", {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({ email, password }),
