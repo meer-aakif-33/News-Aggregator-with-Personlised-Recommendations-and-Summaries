@@ -30,7 +30,9 @@ app.get("/api/news", async (req, res) => {
 });
 
 
-app.use(cors());
+app.use(cors({
+  origin: "https://news-aggregator-with-personlised-re-mu.vercel.app"
+}));
 app.use(express.json());
 // Function to read users from file
 const readUsers = () => {
