@@ -4,6 +4,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken"; // Import JWT for token verification
 import fs from "fs"
+import serverless from "serverless-http";
+
 dotenv.config();
 
 const app = express();
@@ -181,75 +183,6 @@ app.get("/scrape", authMiddleware, async (req, res) => {
   }
 });
 
-// Summarization Endpoint (No Authentication Required)
-// app.post("/summarize", async (req, res) => {
-//   const { text } = req.body;
-
-//   if (!text || typeof text !== "string") {
-//     return res.status(400).json({ error: "Valid text parameter is required." });
-//   }
-
-//   try {
-//     const pythonResponse = await axios.post(
-//       "http://localhost:5000/summarize",
-//       { text },
-//       {
-//         headers: {
-//           "Content-Type": "application/json",
-//         },
-//       }
-//     );    
-
-//     if (pythonResponse.data.summary) {
-//       res.json({ summary: pythonResponse.data.summary });
-//     } else {
-//       res.status(500).json({ error: "Failed to generate summary." });
-//     }
-//   } catch (error) {
-//     console.error("Error during summarization:", error.response?.data || error.message);
-//     res.status(500).json({ error: "Failed to generate summary." });
-//   }
-// });
-
-//NewsAPI Route
-// app.post("/get-recommendations", async (req, res) => {
-//   try {
-//     //console.log("🔍 Incoming Request Body:", JSON.stringify(req.body, null, 2));
-
-//     const { articles, title } = req.body;
-
-//     if (!articles || !title) {
-//       return res.status(400).json({ error: "Missing articles or title" });
-//     }
-
-//     //console.log("📤 Sending to Python API:", JSON.stringify({ articles, title }, null, 2));
-
-//     const response = await axios.post("http://localhost:5000/recommend", { articles, title });
-    
-//     // console.log("✅ Response from Python API:", response.data);
-//     res.json(response.data);
-//   } catch (error) {
-//     console.error("❌ Error fetching recommendations:", error.response?.data || error.message);
-//     res.status(500).json({ error: "Failed to get recommendations", details: error.response?.data });
-//   }
-// });
-
-//predict-fakeness Route
-// app.post("/predict-fakeness", async (req, res) => {
-//   const { text } = req.body;
-
-//   if (!text || typeof text !== "string") {
-//     return res.status(400).json({ error: "Text content is required." });
-//   }
-
-//   try {
-//     const response = await axios.post("http://localhost:5003/predict-fakeness", { text });
-//     res.json(response.data);
-//   } catch (error) {
-//     console.error("Prediction error:", error.response?.data || error.message);
-//     res.status(500).json({ error: "Failed to predict fakeness." });
-//   }
-// });
 
 
 // Local dev only 
@@ -259,4 +192,12 @@ if (process.env.NODE_ENV !== "production") {
     });
 }
 
-module.exports = app;  
+// Local dev only
+if (process.env.NODE_ENV !== "production") {
+    app.listen(PORT, () => {
+        console.log(`Server running at http://localhost:${PORT}`);
+    });
+}
+
+// Export Express app wrapped for Vercel serverless
+export const handler = serverless(app);
