@@ -16,7 +16,7 @@ export default function LoginSignupPage({ setIsAuthenticated }) {
   useEffect(() => {
     const storedName = localStorage.getItem("userName");
     if (storedName) {
-      setName(storedName);
+      setName(storedName);  
     }
   }, []);
 
@@ -29,7 +29,7 @@ const handleSignup = async (event) => {
   }
 
   try {
-    const response = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com/signup", {
+    const response = await fetch("https://localhost:5000/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),
@@ -68,7 +68,7 @@ const handleSignup = async (event) => {
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com/login", {
+      const response = await fetch("https://localhost:5000/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

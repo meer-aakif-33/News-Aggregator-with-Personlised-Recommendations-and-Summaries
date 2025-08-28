@@ -34,7 +34,7 @@ app.get("/", (req, res) => {
 app.get("/api/news", async (req, res) => {
   const query = req.query.q || "Science+Health+education";
   const url = `https://newsapi.org/v2/everything?q=${query}&apiKey=${NEWS_API_KEY}`;
-
+  
   try {
     const response = await axios.get(url);
     res.json(response.data);
@@ -43,20 +43,6 @@ app.get("/api/news", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch news" });
   }
 });
-
-// === Users file helpers ===
-const readUsers = () => {
-  try {
-    const data = fs.readFileSync("users.json", "utf8");
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-};
-const writeUsers = (users) => {
-  fs.writeFileSync("users.json", JSON.stringify(users, null, 2));
-};
-
 
 // Auth middleware
 const authMiddleware = (req, res, next) => {
@@ -78,7 +64,8 @@ app.post("/signup", async (req, res) => {
   
   try {
     // Check existing user
-    const existing = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    const existing = await pool.query('SELECT * FROM "users-table" WHERE email = $1', [email]);
+    console.log("Connecting to DB...");
     if (existing.rows.length > 0)
       return res.status(400).json({ error: "User already exists" });
     
@@ -87,9 +74,11 @@ app.post("/signup", async (req, res) => {
 
     // Insert new user
     const result = await pool.query(
-      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email",
+      'INSERT INTO "users-table" (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email',
       [name, email, hashedPassword]
     );
+    console.log("Inserting user:", { name, email });
+
     
     const newUser = result.rows[0];
     const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: "1h" });
@@ -109,7 +98,7 @@ app.post("/login", async (req, res) => {
     return res.status(400).json({ error: "Email and password required" });
   
   try {
-    const userRes = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+    const userRes = await pool.query('SELECT * FROM "users-table" WHERE email = $1', [email]);
     const user = userRes.rows[0];
     
     if (!user) return res.status(401).json({ error: "Invalid email or password" });
@@ -125,6 +114,8 @@ app.post("/login", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
 // Scrape route (protected)
 app.get("/scrape", authMiddleware, async (req, res) => {
   const { url } = req.query;
@@ -203,21 +194,35 @@ app.post("/get-recommendations", async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// === "users-table" file helpers ===
+// const read"users-table" = () => {
+//   try {
+//     const data = fs.readFileSync(""users-table".json", "utf8");
+//     return data ? JSON.parse(data) : [];
+//   } catch {
+//     return [];
+//   }
+// };
+// const write"users-table" = ("users-table") => {
+//   fs.writeFileSync(""users-table".json", JSON.stringify("users-table", null, 2));
+// };
+
+
 // Signup
 // app.post("/signup", (req, res) => {
 //   const { name, email, password } = req.body;
-//   let users = readUsers();
+//   let "users-table" = read"users-table"();
 
 //   if (!name || !email || !password) {
 //     return res.status(400).json({ error: "All fields are required" });
 //   }
-//   if (users.find((u) => u.email === email)) {
+//   if ("users-table".find((u) => u.email === email)) {
 //     return res.status(400).json({ error: "User already exists" });
 //   }
 
-//   const newUser = { id: users.length + 1, name, email, password };
-//   users.push(newUser);
-//   writeUsers(users);
+//   const newUser = { id: "users-table".length + 1, name, email, password };
+//   "users-table".push(newUser);
+//   write"users-table"("users-table");
 
 //   const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: "1h" });
 //   res.status(201).json({ token });
@@ -226,9 +231,9 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 // // Login
 // app.post("/login", (req, res) => {
 //   const { email, password } = req.body;
-//   let users = readUsers();
+//   let "users-table" = read"users-table"();
 
-//   const user = users.find((u) => u.email === email && u.password === password);
+//   const user = "users-table".find((u) => u.email === email && u.password === password);
 //   if (!user) {
 //     return res.status(401).json({ error: "Invalid email or password" });
 //   }
@@ -280,25 +285,25 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 
 // app.use(express.json());
-// // Function to read users from file
-// const readUsers = () => {
+// // Function to read "users-table" from file
+// const read"users-table" = () => {
 //   try {
-//     const data = fs.readFileSync("users.json", "utf8");
+//     const data = fs.readFileSync(""users-table".json", "utf8");
 //     return data ? JSON.parse(data) : [];
 //   } catch (error) {
-//     console.error("Error reading users.json:", error);
+//     console.error("Error reading "users-table".json:", error);
 //     return []; // Ensure an empty array is returned if file is missing/corrupt
 //   }
 // };
 
 
-// // Function to write users to file
-// const writeUsers = (users) => {
+// // Function to write "users-table" to file
+// const write"users-table" = ("users-table") => {
 //   try {
-//     fs.writeFileSync("users.json", JSON.stringify(users, null, 2));
-//     console.log("Updated users.json successfully");
+//     fs.writeFileSync(""users-table".json", JSON.stringify("users-table", null, 2));
+//     console.log("Updated "users-table".json successfully");
 //   } catch (error) {
-//     console.error("Error writing to users.json:", error);
+//     console.error("Error writing to "users-table".json:", error);
 //   }
 // };
 
@@ -307,33 +312,33 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 //   try {
 //     const { name, email, password } = req.body;
-//     let users = readUsers();
+//     let "users-table" = read"users-table"();
 
-//     // console.log("Current Users in File:", users);
+//     // console.log("Current "users-table" in File:", "users-table");
 
 //     if (!name || !email || !password) {
 //       console.log("Validation Failed: Missing fields");
 //       return res.status(400).json({ error: "All fields are required" });
 //     }
 
-//     const existingUser = users.find((u) => u.email === email);
+//     const existingUser = "users-table".find((u) => u.email === email);
 //     if (existingUser) {
 //       console.log("User already exists:", existingUser);
 //       return res.status(400).json({ error: "User already exists" });
 //     }
 
 //     const newUser = {
-//       id: users.length + 1,
+//       id: "users-table".length + 1,
 //       name,
 //       email,
 //       password, // In production, hash the password before storing
 //     };
 
-//     users.push(newUser);
-//     writeUsers(users);
+//     "users-table".push(newUser);
+//     write"users-table"("users-table");
 
 //     console.log("New user added:", newUser);
-//     // console.log("Users after adding new user:", users);
+//     // console.log(""users-table" after adding new user:", "users-table");
 
 //     const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: "1h" });
 
@@ -350,9 +355,9 @@ app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 //   try {
 //     const { email, password } = req.body;
-//     let users = readUsers();
+//     let "users-table" = read"users-table"();
 
-//     const user = users.find((u) => u.email === email && u.password === password);
+//     const user = "users-table".find((u) => u.email === email && u.password === password);
 //     if (!user) {
 //       console.log("Invalid credentials");
 //       return res.status(401).json({ error: "Invalid email or password" });
