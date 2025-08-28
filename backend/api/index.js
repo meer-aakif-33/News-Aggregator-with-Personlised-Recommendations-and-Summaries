@@ -113,6 +113,58 @@ app.get("/scrape", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Failed to load article." });
   }
 });
+// Summarization Endpoint (No Authentication Required)
+app.post("/summarize", async (req, res) => {
+  const { text } = req.body;
+
+  if (!text || typeof text !== "string") {
+    return res.status(400).json({ error: "Valid text parameter is required." });
+  }
+
+  try {
+    const pythonResponse = await axios.post(
+      "http://localhost:5002/summarize",
+      { text },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );    
+
+    if (pythonResponse.data.summary) {
+      res.json({ summary: pythonResponse.data.summary });
+    } else {
+      res.status(500).json({ error: "Failed to generate summary." });
+    }
+  } catch (error) {
+    console.error("Error during summarization:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to generate summary." });
+  }
+});
+
+//NewsAPI Route
+app.post("/get-recommendations", async (req, res) => {
+  try {
+    //console.log("🔍 Incoming Request Body:", JSON.stringify(req.body, null, 2));
+
+    const { articles, title } = req.body;
+
+    if (!articles || !title) {
+      return res.status(400).json({ error: "Missing articles or title" });
+    }
+
+    //console.log("📤 Sending to Python API:", JSON.stringify({ articles, title }, null, 2));
+
+    const response = await axios.post("http://localhost:5001/recommend", { articles, title });
+    
+    // console.log("✅ Response from Python API:", response.data);
+    res.json(response.data);
+  } catch (error) {
+    console.error("❌ Error fetching recommendations:", error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to get recommendations", details: error.response?.data });
+  }
+});
 
 // 🚀 Export ONLY the app (no app.listen!)
 export default app;
