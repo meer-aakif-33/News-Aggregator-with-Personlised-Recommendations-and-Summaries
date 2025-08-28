@@ -115,7 +115,7 @@ app.get("/scrape", authMiddleware, async (req, res) => {
 });
 
 // 🚀 Export ONLY the app (no app.listen!)
-module.exports = app;
+export default app;
 
 // import express from "express";
 // import axios from "axios";
