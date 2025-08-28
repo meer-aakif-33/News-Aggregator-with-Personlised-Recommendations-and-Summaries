@@ -10,6 +10,7 @@ dotenv.config();
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret"; 
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -168,9 +169,10 @@ app.post("/get-recommendations", async (req, res) => {
 
 });
 
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
 // 🚀 Export ONLY the app (no app.listen!)
-export default app;
+//export default app;
 
 // import express from "express";
 // import axios from "axios";
@@ -183,7 +185,6 @@ export default app;
 // dotenv.config();
 
 // const app = express();
-// const PORT = process.env.PORT || 5003;
 // const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret"; 
 // const NEWS_API_KEY = process.env.NEWS_API_KEY;
 // app.use(cors());
