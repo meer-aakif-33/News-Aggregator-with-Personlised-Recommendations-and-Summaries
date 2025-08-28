@@ -124,6 +124,11 @@ const authMiddleware = (req, res, next) => {
   });
 };
 
+app.get("/", (req, res) => {
+  res.send("Backend is running ✅");
+});
+
+
 // Secure Scrape Endpoint (Requires Authentication)
 app.get("/scrape", authMiddleware, async (req, res) => {
   const { url } = req.query;
