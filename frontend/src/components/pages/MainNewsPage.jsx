@@ -22,7 +22,7 @@ useEffect(() => {
         query = selectedGenres.map(keyword => encodeURIComponent(keyword)).join("+");
       }
 
-      const backendUrl = "https://your-backend.vercel.app"; // replace with real backend URL
+      const backendUrl = "https://news-aggregator-with-personlised-re.vercel.app/"; // replace with real backend URL
       const apiUrl = query
         ? `${backendUrl}/api/news?q=${query}`
         : `${backendUrl}/api/news`;
