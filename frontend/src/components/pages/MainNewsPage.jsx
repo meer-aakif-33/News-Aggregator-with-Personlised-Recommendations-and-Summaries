@@ -11,6 +11,7 @@ export default function MainNewsPage() {
   const storedGenres = JSON.parse(localStorage.getItem("selectedGenres")) || [];
   const selectedGenres = location.state?.selectedGenres || storedGenres;
 
+
 useEffect(() => {
   if (hasFetched.current) return;
 
@@ -22,15 +23,20 @@ useEffect(() => {
         query = selectedGenres.map(keyword => encodeURIComponent(keyword)).join("+");
       }
 
-      const backendUrl = "https://news-aggregator-with-personlised-re.vercel.app/"; // replace with real backend URL
+      const backendUrl = "http://localhost:5003"; // replace with real backend URL
       const apiUrl = query
         ? `${backendUrl}/api/news?q=${query}`
         : `${backendUrl}/api/news`;
 
+      
+
       console.log("Fetching news from backend:", apiUrl);
 
       const response = await fetch(apiUrl);
+      //const text = await response.text();
+      
       const data = await response.json();
+      console.log("Raw response:", data);
 
       if (data.articles) {
         setNewsData(data.articles);
