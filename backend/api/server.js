@@ -11,6 +11,11 @@ const PORT = process.env.PORT || 5003;
 const JWT_SECRET = "aslhbuhbgguhj83rgye76grjhb"; // Replace with a strong secret key
 //console.log("JWT_SECRET:", JWT_SECRET);
 
+app.use(cors({
+  origin: "https://news-aggregator-with-personlised-re-mu.vercel.app", // your frontend domain
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.get("/api/news", async (req, res) => {
   const apiKey = "01b9aacf474d4fd789819e84da3a815b"; // Replace with your News API key
   const query = req.query.q || "Science+Health+education"; // default if nothing passed
@@ -30,9 +35,6 @@ app.get("/api/news", async (req, res) => {
 });
 
 
-app.use(cors({
-  origin: "https://news-aggregator-with-personlised-re-mu.vercel.app"
-}));
 app.use(express.json());
 // Function to read users from file
 const readUsers = () => {
