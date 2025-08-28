@@ -115,12 +115,12 @@ export default function NewsArticlePage() {
     setIsSummarizing(true);
 
     try {
-      const summaryResponse = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com", {
+      const summaryResponse = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com/summarize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },  
         body: JSON.stringify({ text: fullContent }),
       });
-
+x
       if (!summaryResponse.ok) {
         const errorText = await summaryResponse.text();
         console.error("DEBUG: Error generating summary:", errorText);
