@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
 
 export default function LoginSignupPage({ setIsAuthenticated }) {
   console.log("setIsAuthenticated type:", typeof setIsAuthenticated);
@@ -31,7 +29,7 @@ const handleSignup = async (event) => {
   }
 
   try {
-    const response = await fetch(`${BACKEND_URL}/signup`, {
+    const response = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password }),
@@ -70,7 +68,7 @@ const handleSignup = async (event) => {
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch(`${BACKEND_URL}/login`, {
+      const response = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -227,7 +225,7 @@ const handleSignup = async (event) => {
 //     }
   
 //     try {
-//       const response = await fetch("{BACKEND_URL}", {
+//       const response = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com", {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({ name, email, password }),
@@ -259,7 +257,7 @@ const handleSignup = async (event) => {
 //   const handleLogin = async (event) => {
 //     event.preventDefault();
 //     try {
-//       const response = await fetch("{BACKEND_URL}//login", {
+//       const response = await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com//login", {
 //         method: "POST",
 //         headers: { "Content-Type": "application/json" },
 //         body: JSON.stringify({ email, password }),

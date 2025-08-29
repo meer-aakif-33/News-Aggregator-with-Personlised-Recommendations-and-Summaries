@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import React, { useEffect, useState, useRef } from "react";
 import newsImage from "../../assests/images/download.jpg";
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function MainNewsPage() {
   const [newsData, setNewsData] = useState([]);
@@ -24,7 +23,7 @@ useEffect(() => {
         query = selectedGenres.map(keyword => encodeURIComponent(keyword)).join("+");
       }
 
-      const backendUrl = `${BACKEND_URL}`; // replace with real backend URL
+      const backendUrl = "https://news-aggregator-with-personlised-qq5i.onrender.com"; // replace with real backend URL
       const apiUrl = query
         ? `${backendUrl}/api/news?q=${query}`
         : `${backendUrl}/api/news`;
