@@ -29,6 +29,7 @@ dist-ssr
 # Node.js (for frontend and backend if using Node)
 node_modules/
 .env
+.env.production
 dist/
 build/
 backend/node_modules/
