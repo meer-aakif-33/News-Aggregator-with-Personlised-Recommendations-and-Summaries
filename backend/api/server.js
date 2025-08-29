@@ -157,6 +157,7 @@ app.get("/scrape", authMiddleware, async (req, res) => {
 
 // Summarization Endpoint (No Authentication Required)
 app.post("/summarize", async (req, res) => {
+    console.log("Node /summarize req.body:", req.body);
   const { text } = req.body;
   
   if (!text || typeof text !== "string") {

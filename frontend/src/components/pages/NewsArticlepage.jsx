@@ -147,7 +147,7 @@ export default function NewsArticlePage() {
     // }, null, 2));
 
     try {
-      const response = await axios.post("https://news-aggregator-backend-three.vercel.app/get-recommendations", {
+      const response = await axios.post("https://news-aggregator-with-personlised-qq5i.onrender.com/get-recommendations", {
         articles: allArticles,
         title: article.title,
       });
