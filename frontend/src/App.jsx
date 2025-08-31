@@ -22,24 +22,33 @@ function App() {
   };
 
 
-  useEffect(() => {
-    if (!isAuthenticated) return;
+useEffect(() => {
+  if (!isAuthenticated) return;
+
+  const token = localStorage.getItem("authToken");
+  let hasPreferences = null;
+  let decoded = null;
+  let userId = null;
+
+  if (token) {
+    decoded = jwtDecode(token);
+    userId = decoded.id; 
+    hasPreferences = localStorage.getItem(`hasPreferences_${userId}`);
+  }
+
+  // console.log("Auth check:", {
+  //   decoded,
+  //   userId,
+  //   hasPreferences
+  // });
+
+  if (location.pathname === "/" || location.pathname === "/login") {
+    navigate(hasPreferences ? "/mainNews" : "/preferences", { replace: true });
+  }
+}, [isAuthenticated, navigate, location.pathname]);
   
-    const token = localStorage.getItem("authToken");
-    let hasPreferences = null;
-  
-    if (token) {
-      const decoded = jwtDecode(token);
-      const userId = decoded.userId || decoded.email; // Extract unique identifier
-  
-      hasPreferences = localStorage.getItem(`hasPreferences_${userId}`);
-    }
-  
-    if (location.pathname === "/" || location.pathname === "/login") {
-      navigate(hasPreferences ? "/mainNews" : "/preferences", { replace: true });
-    }
-  }, [isAuthenticated, navigate, location.pathname]);
-  
+
+
   return (
     <>
       {isAuthenticated && <Header onLogout={handleLogout} />}
@@ -49,7 +58,8 @@ function App() {
           path="/" 
           element={
             isAuthenticated ? 
-              (!localStorage.getItem("hasPreferences") ? <Navigate to="/preferences" replace /> : <Navigate to="/mainNews" replace />) 
+              (!localStorage.getItem(`hasPreferences_${localStorage.getItem("userId")}`) 
+              ? <Navigate to="/preferences" replace /> : <Navigate to="/mainNews" replace />) 
               : <LoginSignupPage setIsAuthenticated={setIsAuthenticated} />
           } 
         />

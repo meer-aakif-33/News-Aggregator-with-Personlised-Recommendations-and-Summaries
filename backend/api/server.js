@@ -3,13 +3,12 @@ import axios from "axios";
 import cors from "cors";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import fs from "fs";
 import bcrypt from "bcrypt";
 import sql from './db.js';
 
 
 dotenv.config();
-console.log("DATABASE_URL",process.env.DATABASE_URL)
+//console.log("DATABASE_URL",process.env.DATABASE_URL)
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret"; 
@@ -25,19 +24,86 @@ app.get("/", (req, res) => {
   res.send("Backend is running ✅");
 });
 
-// News API route
-app.get("/api/news", async (req, res) => {
-  const query = req.query.q || "Science+Health+education";
-  const url = `https://newsapi.org/v2/everything?q=${query}&apiKey=${NEWS_API_KEY}`;
+// Auth middleware
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "No token provided" });
 
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ error: "Invalid token" });
+    req.user = decoded;
+    next();
+  });
+};
+app.get("/api/news", authMiddleware, async (req, res) => {
+  let query = req.query.q;
+
+  if (!query && req.user) {
+    const user = await sql`
+      SELECT preferences FROM "users-table" WHERE id = ${req.user.id}
+    `;
+
+    if (user.length > 0 && user[0].preferences) {
+      try {
+        query = JSON.parse(user[0].preferences).join("+");
+      } catch (e) {
+        console.error("Error parsing preferences from DB:", e);
+      }
+    }
+  }
+
+  console.log("req.user:", req.user);
+  console.log("Final query used:", query);
+
+  if (!query) query = "Science+Health+education";
+
+  const url = `https://newsapi.org/v2/everything?q=${query}&apiKey=${NEWS_API_KEY}`;
   try {
     const response = await axios.get(url);
     res.json(response.data);
   } catch (error) {
-    console.error("News API error:", error);
+    console.error("News API error:", error.message);
     res.status(500).json({ error: "Failed to fetch news" });
   }
 });
+
+// ✅ Get user preferences using postgres.js
+app.get("/api/get-preferences", async (req, res) => {
+  const { userId } = req.query; // Pass userId as query param
+
+  if (!userId) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
+  try {
+    const users = await sql`
+      SELECT preferences FROM "users-table" WHERE id = ${userId}
+    `;
+    const user = users[0];
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Make sure preferences is always an array
+    let prefs = [];
+    if (user.preferences) {
+      try {
+        prefs = Array.isArray(user.preferences)
+          ? user.preferences
+          : JSON.parse(user.preferences);
+      } catch {
+        prefs = [];
+      }
+    }
+
+    res.json({ preferences: prefs });
+  } catch (error) {
+    console.error("Error fetching preferences:", error);
+    res.status(500).json({ error: "Server error while fetching preferences" });
+  }
+});
+
 // Trending News API route
 app.get("/api/trending-news", async (req, res) => {
   // You can adjust country or category as needed
@@ -55,56 +121,52 @@ app.get("/api/trending-news", async (req, res) => {
   }
 });
 
-// Auth middleware
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "No token provided" });
-
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ error: "Invalid token" });
-    req.user = decoded;
-    next();
-  });
-};
 
 // ================= SIGNUP =================
 app.post("/signup", async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, preferences } = req.body;
 
   if (!name || !email || !password)
     return res.status(400).json({ error: "All fields are required" });
 
   try {
     // Check existing user
-    console.log("Checking existing user...");
     const existing = await sql`
       SELECT * FROM "users-table" WHERE email = ${email}
     `;
-
     if (existing.length > 0)
       return res.status(400).json({ error: "User already exists" });
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert new user
-    console.log("Inserting user:", { name, email });
+    // Insert new user with preferences
     const result = await sql`
-    INSERT INTO "users-table" (name, email, password)
-    VALUES (${name}, ${email}, ${hashedPassword})
-    RETURNING id, name, email
+      INSERT INTO "users-table" (name, email, password)
+      VALUES (${name}, ${email}, ${hashedPassword})
+      RETURNING id, name, email, preferences;
     `;
-    console.log("Inserted user Sucessfully");
-    
-    const newUser = result[0];
-    const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: "1h" });
 
-    res.status(201).json({ token, name: newUser.name, email: newUser.email });
+    const newUser = result[0];
+    const token = jwt.sign(
+      { id: newUser.id, email: newUser.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.status(201).json({
+      token,
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      preferences: newUser.preferences
+    });
   } catch (error) {
     console.error("Signup Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 // ================= LOGIN =================
 app.post("/login", async (req, res) => {
@@ -119,19 +181,54 @@ app.post("/login", async (req, res) => {
     `;
     const user = users[0];
 
-    if (!user) return res.status(401).json({ error: "Invalid email or password" });
+    if (!user)
+      return res.status(401).json({ error: "Invalid email or password" });
 
     const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) return res.status(401).json({ error: "Invalid email or password" });
+    if (!validPassword)
+      return res.status(401).json({ error: "Invalid email or password" });
 
-    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    res.json({ token, name: user.name, email: user.email });
+    res.json({
+      token,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      preferences: user.preferences // 👈 return saved preferences
+    });
   } catch (error) {
     console.error("Login Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+app.post("/update-preferences", async (req, res) => {
+  const { preferences } = req.body;
+  const authHeader = req.headers["authorization"];
+  if (!authHeader) return res.status(401).json({ error: "No token" });
+
+  try {
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    await sql`
+      UPDATE "users-table"
+      SET preferences = ${JSON.stringify(preferences)}
+      WHERE id = ${decoded.id}
+    `;
+
+    res.json({ success: true, preferences });
+  } catch (error) {
+    console.error("Update Preferences Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 // Scrape route (protected)
 app.get("/scrape", authMiddleware, async (req, res) => {

@@ -6,296 +6,104 @@ import newsImage from "../../assests/images/download.jpg";
 export default function MainNewsPage() {
   const [newsData, setNewsData] = useState([]);
   const location = useLocation();
-  const hasFetched = useRef(false); // Prevent multiple API calls
+  const hasFetched = useRef(false);
 
-  const storedGenres = JSON.parse(localStorage.getItem("selectedGenres")) || [];
-  const selectedGenres = location.state?.selectedGenres || storedGenres;
+  const userId = localStorage.getItem("userId");
 
+  let storedGenres;
+  try {
+    const raw = localStorage.getItem(`preferences_${userId}`);
+    const parsed = raw ? JSON.parse(raw) : [];
+    storedGenres = Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.error("Error parsing stored preferences:", e);
+    storedGenres = [];
+  }
 
-useEffect(() => {
-  if (hasFetched.current) return;
+  useEffect(() => {
+    if (hasFetched.current) return;
 
-  const fetchNews = async () => {
-    try {
-      let query = "";
+    const fetchNews = async () => {
+      try {
+        let query = "";
 
-      if (selectedGenres.length > 0) {
-        query = selectedGenres.map(keyword => encodeURIComponent(keyword)).join("+");
+        if (storedGenres.length > 0) {
+          query = storedGenres
+            .map((keyword) => encodeURIComponent(keyword))
+            .join("+");
+        }
+
+        const backendUrl = "https://news-aggregator-with-personlised-qq5i.onrender.com";
+        const apiUrl = query
+          ? `${backendUrl}/api/news?q=${query}`
+          : `${backendUrl}/api/news`;
+
+        console.log("Fetching news from backend:", apiUrl);
+
+        const token = localStorage.getItem("authToken");
+        const response = await fetch(apiUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+        console.log("Raw response:", data);
+
+        if (data.articles) {
+          setNewsData(data.articles);
+          hasFetched.current = true;
+        } else {
+          console.error("No articles found:", data);
+          setNewsData([]);
+        }
+      } catch (error) {
+        console.error("Error fetching news data:", error);
       }
+    };
 
-      const backendUrl = "https://news-aggregator-with-personlised-qq5i.onrender.com"; // replace with real backend URL
-      const apiUrl = query
-        ? `${backendUrl}/api/news?q=${query}`
-        : `${backendUrl}/api/news`;
-
-      
-
-      console.log("Fetching news from backend:", apiUrl);
-
-      const response = await fetch(apiUrl);
-      //const text = await response.text();
-      
-      const data = await response.json();
-      console.log("Raw response:", data);
-
-      if (data.articles) {
-        setNewsData(data.articles);
-        hasFetched.current = true;
-      } else {
-        console.error("No articles found:", data);
-        setNewsData([]);
-      }
-    } catch (error) {
-      console.error("Error fetching news data:", error);
-    }
-  };
-
-  fetchNews();
-}, [selectedGenres]);
-
-
+    fetchNews();
+  }, [storedGenres]);
 
   return (
-<>
-  <div className="news-container">
-    {newsData.slice(0, 2).map((article, index) => {
-      const globalIndex = index;
-      return (
-        <Link
-          to={`/news/${globalIndex}`}
-          state={{ article, allArticles: newsData }}
-          key={globalIndex}
-          className={`newsDiv news-${globalIndex + 1}`}
-        >
-          <div className="news-content">
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-          </div>
-          <img
-            src={article.urlToImage || newsImage}
-            alt="newsImage"
-            className="news-img"
-          />
-        </Link>
-      );
-    })}
-  </div>
+    <div className="px-4 py-8 bg-gray-50 min-h-screen">
+      <h2 className="text-3xl font-bold text-gray-800 text-center mb-8">
+        Latest News
+      </h2>
 
-  <div className="news-container">
-    {newsData.slice(2, 4).map((article, index) => {
-      const globalIndex = index + 2;
-      return (
-        <Link
-          to={`/news/${globalIndex}`}
-          state={{ article, allArticles: newsData }}
-          key={globalIndex}
-          className={`newsDiv news-${globalIndex + 1}`}
-        >
-          <div className="news-content">
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-          </div>
-          <img
-            src={article.urlToImage || newsImage}
-            alt="newsImage"
-            className="news-img"
-          />
-        </Link>
-      );
-    })}
-  </div>
+      {/* Responsive Grid */}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {newsData.slice(0, 20).map((article, index) => (
+          <Link
+            to={`/news/${index}`}
+            state={{ article, allArticles: newsData }}
+            key={index}
+            className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col overflow-hidden"
+          >
+            {/* Image */}
+            <div className="h-48 w-full overflow-hidden">
+              <img
+                src={article.urlToImage || newsImage}
+                alt="news"
+                className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
+              />
+            </div>
 
-  <div className="news-container">
-    {newsData.slice(4, 6).map((article, index) => {
-      const globalIndex = index + 4;
-      return (
-        <Link
-          to={`/news/${globalIndex}`}
-          state={{ article, allArticles: newsData }}
-          key={globalIndex}
-          className={`newsDiv news-${globalIndex + 1}`}
-        >
-          <div className="news-content">
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-          </div>
-          <img
-            src={article.urlToImage || newsImage}
-            alt="newsImage"
-            className="news-img"
-          />
-        </Link>
-      );
-    })}
-  </div>
-
-  <div className="news-container">
-    {newsData.slice(6, 8).map((article, index) => {
-      const globalIndex = index + 6;
-      return (
-        <Link
-          to={`/news/${globalIndex}`}
-          state={{ article, allArticles: newsData }}
-          key={globalIndex}
-          className={`newsDiv news-${globalIndex + 1}`}
-        >
-          <div className="news-content">
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-          </div>
-          <img
-            src={article.urlToImage || newsImage}
-            alt="newsImage"
-            className="news-img"
-          />
-        </Link>
-      );
-    })}
-  </div>
-
-  <div className="news-container">
-    {newsData.slice(8, 10).map((article, index) => {
-      const globalIndex = index + 8;
-      return (
-        <Link
-          to={`/news/${globalIndex}`}
-          state={{ article, allArticles: newsData }}
-          key={globalIndex}
-          className={`newsDiv news-${globalIndex + 1}`}
-        >
-          <div className="news-content">
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-          </div>
-          <img
-            src={article.urlToImage || newsImage}
-            alt="newsImage"
-            className="news-img"
-          />
-        </Link>
-      );
-    })}
-  </div>
-
-  <div className="news-container">
-    {newsData.slice(10, 12).map((article, index) => {
-      const globalIndex = index + 10;
-      return (
-        <Link
-          to={`/news/${globalIndex}`}
-          state={{ article, allArticles: newsData }}
-          key={globalIndex}
-          className={`newsDiv news-${globalIndex + 1}`}
-        >
-          <div className="news-content">
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-          </div>
-          <img
-            src={article.urlToImage || newsImage}
-            alt="newsImage"
-            className="news-img"
-          />
-        </Link>
-      );
-    })}
-  </div>
-
-  <div className="news-container">
-    {newsData.slice(12, 14).map((article, index) => {
-      const globalIndex = index + 12;
-      return (
-        <Link
-          to={`/news/${globalIndex}`}
-          state={{ article, allArticles: newsData }}
-          key={globalIndex}
-          className={`newsDiv news-${globalIndex + 1}`}
-        >
-          <div className="news-content">
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-          </div>
-          <img
-            src={article.urlToImage || newsImage}
-            alt="newsImage"
-            className="news-img"
-          />
-        </Link>
-      );
-    })}
-  </div>
-
-  <div className="news-container">
-    {newsData.slice(14, 16).map((article, index) => {
-      const globalIndex = index + 14;
-      return (
-        <Link
-          to={`/news/${globalIndex}`}
-          state={{ article, allArticles: newsData }}
-          key={globalIndex}
-          className={`newsDiv news-${globalIndex + 1}`}
-        >
-          <div className="news-content">
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-          </div>
-          <img
-            src={article.urlToImage || newsImage}
-            alt="newsImage"
-            className="news-img"
-          />
-        </Link>
-      );
-    })}
-  </div>
-
-  <div className="news-container">
-    {newsData.slice(16, 18).map((article, index) => {
-      const globalIndex = index + 16;
-      return (
-        <Link
-          to={`/news/${globalIndex}`}
-          state={{ article, allArticles: newsData }}
-          key={globalIndex}
-          className={`newsDiv news-${globalIndex + 1}`}
-        >
-          <div className="news-content">
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-          </div>
-          <img
-            src={article.urlToImage || newsImage}
-            alt="newsImage"
-            className="news-img"
-          />
-        </Link>
-      );
-    })}
-  </div>
-
-  <div className="news-container">
-    {newsData.slice(18, 20).map((article, index) => {
-      const globalIndex = index + 18;
-      return (
-        <Link
-          to={`/news/${globalIndex}`}
-          state={{ article, allArticles: newsData }}
-          key={globalIndex}
-          className={`newsDiv news-${globalIndex + 1}`}
-        >
-          <div className="news-content">
-            <h3>{article.title}</h3>
-            <p>{article.description}</p>
-          </div>
-          <img
-            src={article.urlToImage || newsImage}
-            alt="newsImage"
-            className="news-img"
-          />
-        </Link>
-      );
-    })}
-  </div>
-</>
+            {/* Content */}
+            <div className="p-5 flex flex-col flex-1">
+              <h3 className="text-lg font-semibold text-gray-900 line-clamp-2 mb-2">
+                {article.title}
+              </h3>
+              <p className="text-gray-600 text-sm flex-1 line-clamp-3">
+                {article.description}
+              </p>
+              <span className="mt-4 text-blue-600 font-medium hover:underline text-sm">
+                Read More →
+              </span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
-};
+}

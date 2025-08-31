@@ -20,27 +20,32 @@ const NewsGenreSelection = () => {
     );
   };
 
-  const handleDone = () => {
-    if (selectedGenres.length > 0) {
-      alert("You selected the following genres: " + selectedGenres.join(", "));
-  
-      const token = localStorage.getItem("authToken");
-      if (token) {
-        const decoded = jwtDecode(token);
-        const userId = decoded.userId || decoded.email; // Use unique user info
-        
-        localStorage.setItem(`hasPreferences_${userId}`, "true");
-      }
-  
-      // ✅ Store selected genres in localStorage
-      localStorage.setItem("selectedGenres", JSON.stringify(selectedGenres));
-  
-      navigate("/mainNews", { state: { selectedGenres } });
-    } else {
-      alert("Please select at least one genre before proceeding.");
-    }
-  };
-  
+const handleDone = async () => {
+  if (selectedGenres.length > 0) {
+    alert("You selected: " + selectedGenres.join(", "));
+
+    const token = localStorage.getItem("authToken");
+    const userId = localStorage.getItem("userId");
+
+    // Save locally
+    localStorage.setItem(`hasPreferences_${userId}`, "true");
+    localStorage.setItem(`preferences_${userId}`, JSON.stringify(selectedGenres));
+
+    // Save in DB
+    await fetch("https://news-aggregator-with-personlised-qq5i.onrender.com/update-preferences", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ preferences: selectedGenres }),
+    });
+
+    navigate("/mainNews", { state: { selectedGenres } });
+  } else {
+    alert("Please select at least one genre.");
+  }
+};
   
   return (
     <div style={styles.container}>
