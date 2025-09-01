@@ -34,7 +34,7 @@ export default function MainNewsPage() {
             .join("+");
         }
 
-        const backendUrl = "http://localhost:5003";
+        const backendUrl = "https://news-aggregator-with-personlised-qq5i.onrender.com";
         const apiUrl = query
           ? `${backendUrl}/api/news?q=${query}`
           : `${backendUrl}/api/news`;

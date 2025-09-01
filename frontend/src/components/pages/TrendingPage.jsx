@@ -10,7 +10,7 @@ export default function TrendingNewsPage() {
   useEffect(() => {
     const fetchTrendingNews = async () => {
       try {
-        const backendUrl = "http://localhost:5003";
+        const backendUrl = "https://news-aggregator-with-personlised-qq5i.onrender.com";
         const apiUrl = `${backendUrl}/api/trending-news`;
 
         const response = await fetch(apiUrl);
