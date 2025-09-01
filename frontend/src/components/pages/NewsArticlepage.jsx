@@ -1,3 +1,5 @@
+// components/pages/NewsArticlePage.jsx
+
 import nlp from "compromise"; // NLP library used for sentence parsing and processing
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";

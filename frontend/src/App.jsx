@@ -1,4 +1,4 @@
-import {jwtDecode} from "jwt-decode";
+import {jwtDecode} from "jwt-decode"; // ✅ fixed import
 import './App.css';
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
@@ -16,52 +16,68 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("authToken"));
 
   const handleLogout = () => {
+    console.log("Logging out...");
     localStorage.removeItem("authToken");
     setIsAuthenticated(false);
     navigate("/");
   };
 
+  useEffect(() => {
+    if (!isAuthenticated) return;
 
-useEffect(() => {
-  if (!isAuthenticated) return;
+    const token = localStorage.getItem("authToken");
+    let decoded = null;
+    let userId = null;
+    let hasPreferences = null;
 
-  const token = localStorage.getItem("authToken");
-  let hasPreferences = null;
-  let decoded = null;
-  let userId = null;
+    if (token) {
+      try {
+        decoded = jwtDecode(token);
+        userId = decoded.id;
+        hasPreferences = localStorage.getItem(`hasPreferences_${userId}`);
+      } catch (err) {
+        console.error("Failed to decode JWT:", err);
+      }
+    }
 
-  if (token) {
-    decoded = jwtDecode(token);
-    userId = decoded.id; 
-    hasPreferences = localStorage.getItem(`hasPreferences_${userId}`);
-  }
+    // console.log("==== Auth Check ====");
+    // console.log("Token:", token);
+    // console.log("Decoded:", decoded);
+    // console.log("UserId:", userId);
+    // console.log("Has Preferences:", hasPreferences);
+    // console.log("===================");
 
-  // console.log("Auth check:", {
-  //   decoded,
-  //   userId,
-  //   hasPreferences
-  // });
-
-  if (location.pathname === "/" || location.pathname === "/login") {
-    navigate(hasPreferences ? "/mainNews" : "/preferences", { replace: true });
-  }
-}, [isAuthenticated, navigate, location.pathname]);
-  
-
+    if (location.pathname === "/" || location.pathname === "/login") {
+      navigate(hasPreferences ? "/mainNews" : "/preferences", { replace: true });
+    }
+  }, [isAuthenticated, navigate, location.pathname]);
 
   return (
     <>
       {isAuthenticated && <Header onLogout={handleLogout} />}
 
       <Routes>
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
-            isAuthenticated ? 
-              (!localStorage.getItem(`hasPreferences_${localStorage.getItem("userId")}`) 
-              ? <Navigate to="/preferences" replace /> : <Navigate to="/mainNews" replace />) 
-              : <LoginSignupPage setIsAuthenticated={setIsAuthenticated} />
-          } 
+            (() => {
+              const token = localStorage.getItem("authToken");
+              const userId = localStorage.getItem("userId");
+              const hasPreferences = localStorage.getItem(`hasPreferences_${userId}`);
+
+              // console.log("==== Route / Check ====");
+              // console.log("Token:", token);
+              // console.log("UserId:", userId);
+              // console.log("Has Preferences:", hasPreferences);
+              // console.log("======================");
+
+              if (isAuthenticated) {
+                return !hasPreferences ? <Navigate to="/preferences" replace /> : <Navigate to="/mainNews" replace />;
+              } else {
+                return <LoginSignupPage setIsAuthenticated={setIsAuthenticated} />;
+              }
+            })()
+          }
         />
         <Route path="/preferences" element={isAuthenticated ? <PreferencesPage /> : <Navigate to="/" replace />} />
         <Route path="/mainNews" element={isAuthenticated ? <MainNewsPage /> : <Navigate to="/" replace />} />

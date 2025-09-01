@@ -110,6 +110,9 @@ const handleLogin = async (event) => {
     if (data.preferences && data.preferences.length > 0) {
       localStorage.setItem(`hasPreferences_${data.id}`, "true");
     }
+    // console.log("Current userId:", localStorage.getItem("userId"));
+    // console.log("Current preferences:", localStorage.getItem(`preferences_${localStorage.getItem("userId")}`));
+    // console.log("All localStorage keys:", Object.keys(localStorage));
 
     if (typeof setIsAuthenticated === "function") {
       setIsAuthenticated(true);

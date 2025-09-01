@@ -1,3 +1,6 @@
+// components/pages/ProfilePage.jsx
+
+
 import React, { useEffect, useState } from "react";
 import { User, Mail, Settings, CheckCircle2, Edit3 } from "lucide-react"; // icons
 

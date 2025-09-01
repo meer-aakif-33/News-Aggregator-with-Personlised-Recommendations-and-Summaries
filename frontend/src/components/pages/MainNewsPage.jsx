@@ -1,3 +1,5 @@
+// components/pages/MainNewsPage.jsx
+
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import React, { useEffect, useState, useRef } from "react";
