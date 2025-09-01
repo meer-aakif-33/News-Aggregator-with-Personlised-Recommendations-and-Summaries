@@ -4,7 +4,9 @@ import { useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
+
 export default function NewsArticlePage() {
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const location = useLocation();
   const { id } = useParams(); // Extracts the article ID from the URL (if needed later)
 
@@ -145,6 +147,7 @@ export default function NewsArticlePage() {
     //   articles: allArticles, 
     //   title: article.title 
     // }, null, 2));
+  setLoadingRecommendations(true); // start loading
 
     try {
       const response = await axios.post("https://news-aggregator-with-personlised-qq5i.onrender.com/get-recommendations", {
@@ -154,8 +157,10 @@ export default function NewsArticlePage() {
 
       console.log("✅ Respoooonse from Backend:", response.data);
       setRecommendations(response.data || []);
+      setLoadingRecommendations(false); // stop loading
     } catch (error) {
       console.error("Error fetching recommendations:", error.response?.data || error.message);
+
     }
   };
 
@@ -289,35 +294,60 @@ export default function NewsArticlePage() {
       )}
 
       {/* Display Recommended Articles */}
-      <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4 border-b-2 pb-2">
-          Recommended Articles
-        </h2>
-        {recommendations.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recommendations.map((recArticle, index) => (
-              <Link
-                key={index}
-                to={`/news/recommended-${index}`} // Unique route for recommended articles
-                state={{ article: recArticle, allArticles: allArticles }}
-                className="block bg-white shadow-lg rounded-lg overflow-hidden transition-transform transform hover:scale-105"
-              >
-                <img
-                  src={recArticle.urlToImage || "default-image.jpg"}
-                  alt="Recommended Article"
-                  className="w-full h-40 object-cover"
-                />
-                <div className="p-4">
-                  <h3 className="text-md font-semibold text-gray-800">{recArticle.title}</h3>
-                  <p className="text-sm text-gray-600 mt-2">{recArticle.source || "Unknown Source"}</p>
-                </div>
-              </Link>
-            ))}
+<div className="mt-8">
+  <h2 className="text-xl font-semibold mb-4 border-b-2 pb-2">
+    Recommended Articles
+  </h2>
+  {loadingRecommendations ? (
+    <div className="flex justify-center items-center py-8">
+      <svg
+        className="animate-spin h-8 w-8 text-blue-500"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
+        ></circle>
+        <path
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8v8H4z"
+        ></path>
+      </svg>
+      <span className="ml-2 text-gray-600">Kindly wait, loading recommendations...</span>
+    </div>
+  ) : recommendations.length > 0 ? (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {recommendations.map((recArticle, index) => (
+        <Link
+          key={index}
+          to={`/news/recommended-${index}`}
+          state={{ article: recArticle, allArticles: allArticles }}
+          className="block bg-white shadow-lg rounded-lg overflow-hidden transition-transform transform hover:scale-105"
+        >
+          <img
+            src={recArticle.urlToImage || "default-image.jpg"}
+            alt="Recommended Article"
+            className="w-full h-40 object-cover"
+          />
+          <div className="p-4">
+            <h3 className="text-md font-semibold text-gray-800">{recArticle.title}</h3>
+            <p className="text-sm text-gray-600 mt-2">{recArticle.source || "Unknown Source"}</p>
           </div>
-        ) : (
-          <p className="text-gray-600">No recommendations found.</p>
-        )}
-      </div>
+        </Link>
+      ))}
+    </div>
+  ) : (
+    <p className="text-gray-600">No recommendations found.</p>
+  )}
+</div>
+
 
     </div>
   );
