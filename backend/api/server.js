@@ -311,7 +311,7 @@ app.post("/summarize", async (req, res) => {
   
   try {
     const pythonResponse = await axios.post(
-      "https://news-aggregator-with-personlised-g3ky.onrender.com",
+      "https://news-aggregator-with-personlised-g3ky.onrender.com/summarize",
       { text },
       {
         headers: {
