@@ -25,9 +25,9 @@ export default function Header({ onLogout }) {
   return (
     <nav
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
-        scrolled
-          ? "bg-white/20 backdrop-blur-md border-b border-white/30 shadow-lg"
-          : "bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-md"
+      scrolled
+        ? "bg-white/50 backdrop-blur-md border-b border-white/50 shadow-lg" // more transparent
+        : "bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-md"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,7 +38,7 @@ export default function Header({ onLogout }) {
           </div>
 
           {/* Desktop Links */}
-          <ul className="hidden md:flex space-x-8 text-white font-medium">
+          <ul className="hidden md:flex space-x-8 text-black font-medium">
             {navLinks.map((item) => {
               const isActive = location.pathname === item.path;
               return (
