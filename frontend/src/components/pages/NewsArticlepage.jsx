@@ -26,6 +26,13 @@ export default function NewsArticlePage() {
     console.error("DEBUG: Article object is undefined in location state.");
     return <div>Article not found!</div>;
   }
+
+  // ✅ Scroll to top whenever article changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [article]);
+
+
   useEffect(() => {
     // Reset summary when article changes
     setSummary(null);

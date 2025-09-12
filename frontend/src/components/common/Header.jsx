@@ -33,9 +33,13 @@ export default function Header({ onLogout }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
-          <div className="text-2xl font-extrabold tracking-wide bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-400 bg-clip-text text-transparent">
+          <Link
+            to="/"
+            className="text-2xl font-extrabold tracking-wide bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition"
+            onClick={() => setIsOpen(false)} // ✅ close mobile menu if open
+          >
             NewsApp
-          </div>
+          </Link>
 
           {/* Desktop Links */}
           <ul className="hidden md:flex space-x-8 text-black font-medium">
@@ -48,7 +52,7 @@ export default function Header({ onLogout }) {
                     className={`relative group transition ${
                       isActive
                         ? "text-yellow-300 font-bold"
-                        : "hover:text-yellow-300"
+                        : "hover:text-orange-300"
                     }`}
                   >
                     <span>{item.name}</span>
