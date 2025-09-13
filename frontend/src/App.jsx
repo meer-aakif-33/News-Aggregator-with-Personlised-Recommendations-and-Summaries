@@ -10,6 +10,8 @@ import TrendingPage from "./components/pages/TrendingPage";
 import Header from "./components/common/Header";
 import LoginSignupPage from './components/pages/LoginPage';
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import { Toaster } from "react-hot-toast";
+
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,7 +50,8 @@ function App() {
     // console.log("===================");
 
     if (location.pathname === "/" || location.pathname === "/login") {
-      navigate(hasPreferences ? "/mainNews" : "/preferences", { replace: true });
+      navigate(hasPreferences ? "/mainNews" : "/preferences",
+    { replace: true, state: { fromAuth: true } } );
     }
   }, [isAuthenticated, navigate, location.pathname]);
 
@@ -60,7 +63,7 @@ function App() {
   return (
     <>
       {isAuthenticated && <Header onLogout={handleLogout} />}
-
+      <Toaster position="top-center" reverseOrder={false} />
       <Routes>
         <Route
           path="/"
