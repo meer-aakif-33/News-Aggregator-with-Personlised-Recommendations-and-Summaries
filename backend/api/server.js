@@ -219,35 +219,39 @@ app.post("/signup", async (req, res) => {
 // ================= LOGIN =================
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
-  
-  if (!email || !password)
+
+  if (!email || !password) {
     return res.status(400).json({ error: "Email and password required" });
-  
+  }
+
   try {
     const users = await sql`
-    SELECT * FROM "users-table" WHERE email = ${email}
+      SELECT * FROM "users-table" WHERE email = ${email}
     `;
     const user = users[0];
-    
-    if (!user)
-      return res.status(401).json({ error: "Invalid email or password" });
-    
+
+    if (!user) {
+      // 👇 tell frontend the email doesn’t exist
+      return res.status(404).json({ error: "User does not exist" });
+    }
+
     const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword)
-      return res.status(401).json({ error: "Invalid email or password" });
-    
+    if (!validPassword) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
     const token = jwt.sign(
       { id: user.id, email: user.email },
       JWT_SECRET,
       { expiresIn: "1h" }
     );
-    
+
     res.json({
       token,
       id: user.id,
       name: user.name,
       email: user.email,
-      preferences: user.preferences // 👈 return saved preferences
+      preferences: user.preferences
     });
   } catch (error) {
     console.error("Login Error:", error);

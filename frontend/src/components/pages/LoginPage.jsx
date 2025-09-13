@@ -93,8 +93,13 @@ const handleLogin = async (event) => {
     console.log("Server response:", data);
     
       if (!response.ok) {
-        toast.error(data.error || "User doesn't exist / Invalid credentials");
-        console.error("Login failed:", data.error || response.statusText);
+        if (response.status === 404) {
+          toast.error("User does not exist");
+        } else if (response.status === 401) {
+          toast.error("Invalid password");
+        } else {
+          toast.error(data.error || "Login failed");
+        }
         return;
       }
 

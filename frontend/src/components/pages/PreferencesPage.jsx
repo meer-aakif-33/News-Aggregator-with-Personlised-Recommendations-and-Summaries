@@ -23,11 +23,11 @@ const NewsGenreSelection = () => {
 
   const handleDone = async () => {
     if (selectedGenres.length === 0) {
-      toast.error("⚠️ Please select at least one genre!", { duration: 3000 });
+      toast.error("⚠️ Please select at least one genre!", { duration: 2000 });
       return;
     }
 
-    toast.success("✅ Preferences saved successfully!", { duration: 3000 });
+    toast.success("✅ Preferences saved successfully!", { duration: 2000 });
 
     const token = localStorage.getItem("authToken");
     const userId = localStorage.getItem("userId");
