@@ -5,11 +5,16 @@ import { useLocation } from "react-router-dom";
 import React, { useEffect, useState, useRef } from "react";
 import newsImage from "../../assests/images/download.jpg";
 import { motion } from "framer-motion";
-
+import { useNavigate } from "react-router-dom";
 export default function MainNewsPage() {
   const [newsData, setNewsData] = useState([]);
   const location = useLocation();
   const hasFetched = useRef(false);
+  const navigate = useNavigate(); // ✅ add this
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
 
   const userId = localStorage.getItem("userId");
 
@@ -22,12 +27,20 @@ export default function MainNewsPage() {
     console.error("Error parsing stored preferences:", e);
     storedGenres = [];
   }
-
+  
+  const token = localStorage.getItem("authToken");  
   useEffect(() => {
     if (hasFetched.current) return;
 
+    if (!token) {
+    console.error("No token found, skipping fetch.");
+    setNewsData([]); // clear state to avoid stale data
+    return;
+    }
+
     const fetchNews = async () => {
       try {
+        setLoading(true);
         let query = "";
 
         if (storedGenres.length > 0) {
@@ -43,12 +56,19 @@ export default function MainNewsPage() {
 
         console.log("Fetching news from backend:", apiUrl);
 
-        const token = localStorage.getItem("authToken");
         const response = await fetch(apiUrl, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+
+        if (response.status === 401) {
+        console.warn("401 Unauthorized → logging out");
+        localStorage.removeItem("authToken"); // ✅ clear token
+        navigate("/", { replace: true }); // ✅ redirect to login
+        return;
+        }
+
 
         const data = await response.json();
         console.log("Raw response:", data);
@@ -58,15 +78,35 @@ export default function MainNewsPage() {
           hasFetched.current = true;
         } else {
           console.error("No articles found:", data);
+          setError("No articles found");
           setNewsData([]);
         }
       } catch (error) {
         console.error("Error fetching news data:", error);
+        setError(error.message);
+      }
+      finally {
+      setLoading(false); // ✅ ensures spinner disappears
       }
     };
 
     fetchNews();
   }, [storedGenres]);
+
+
+  if (loading)
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-purple-50">
+      <div className="w-16 h-16 border-4 border-indigo-300 border-t-indigo-600 rounded-full animate-spin"></div>
+    </div>
+  );
+
+if (error)
+  return (
+    <div className="flex justify-center items-center min-h-screen text-red-600 text-xl font-semibold">
+      Error: {error}
+    </div>
+  );
 
   return (
     <div className="px-6 py-12 min-h-screen 
