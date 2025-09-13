@@ -1,5 +1,5 @@
 // components/pages/MainNewsPage.jsx
-
+import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import React, { useEffect, useState, useRef } from "react";
@@ -37,6 +37,28 @@ export default function MainNewsPage() {
     setNewsData([]); // clear state to avoid stale data
     return;
     }
+
+  // ✅ Show toast only once per login/signup
+  const welcomeKey = `welcomeShown_${userId}`;
+  const welcomeAlreadyShown = localStorage.getItem(welcomeKey);
+
+  if (welcomeAlreadyShown === "false") {
+    const username = localStorage.getItem("userName");
+    if (username) {
+      toast.success(`Welcome, ${username}! 👋`, {
+        style: {
+          borderRadius: "10px",
+          background: "#4f46e5",
+          color: "#fff",
+          fontWeight: "bold",
+          fontSize: "14px",
+          padding: "10px 16px",
+        },
+        icon: "🎉",
+      });
+    }
+    localStorage.setItem(welcomeKey, "true"); // ✅ mark as shown
+  }
 
     const fetchNews = async () => {
       try {

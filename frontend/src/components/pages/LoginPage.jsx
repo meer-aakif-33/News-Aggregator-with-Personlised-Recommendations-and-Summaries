@@ -64,6 +64,7 @@ const handleSignup = async (event) => {
       `preferences_${data.id}`,
       JSON.stringify(data.preferences || [])
     );
+    localStorage.setItem(`welcomeShown_${data.id}`, "false");
 
     if (typeof setIsAuthenticated === "function") {
       setIsAuthenticated(true);
@@ -112,6 +113,7 @@ const handleLogin = async (event) => {
       `preferences_${data.id}`,
       JSON.stringify(data.preferences || [])
     );
+    localStorage.setItem(`welcomeShown_${data.id}`, "false");
 
     if (data.preferences && data.preferences.length > 0) {
       localStorage.setItem(`hasPreferences_${data.id}`, "true");

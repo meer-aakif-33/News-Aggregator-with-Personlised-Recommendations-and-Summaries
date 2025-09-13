@@ -4,10 +4,12 @@
 import {jwtDecode} from "jwt-decode";
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from "react-hot-toast";  
 
 const NewsGenreSelection = () => {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const navigate = useNavigate(); 
+  
 
   const genres = [
     "Technology", "Sports", "Politics", "Entertainment", 
@@ -25,7 +27,7 @@ const NewsGenreSelection = () => {
 
 const handleDone = async () => {
   if (selectedGenres.length > 0) {
-    alert("You selected: " + selectedGenres.join(", "));
+      toast.success("✅ Preferences saved successfully!", { duration: 3000 });
 
     const token = localStorage.getItem("authToken");
     const userId = localStorage.getItem("userId");
@@ -43,12 +45,14 @@ const handleDone = async () => {
       },
       body: JSON.stringify({ preferences: selectedGenres }),
     });
-
-    navigate("/mainNews", { state: { selectedGenres } });
-  } else {
-    alert("Please select at least one genre.");
-  }
-};
+    setTimeout(() => {
+      localStorage.setItem(`welcomeShown_${userId}`, "false"); // ✅ mark as NOT shown yet
+      navigate("/mainNews", { state: { selectedGenres } }); // ❌ removed fromAuth
+    }, 500);
+    } else {
+      toast.error("⚠️ Please select at least one genre!", { duration: 3000 });
+    }
+  };
   
   return (
     <div style={styles.container}>

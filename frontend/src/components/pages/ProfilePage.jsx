@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from "react";
 import { User, Mail, Settings, CheckCircle2, Edit3 } from "lucide-react"; // icons
+import toast from "react-hot-toast";
 
 export default function UserProfile() {
   const [name, setName] = useState(localStorage.getItem("userName") || "");
@@ -87,11 +88,26 @@ export default function UserProfile() {
           JSON.stringify(preferences)
         );
         setEditing(false);
+
+        // ✅ Toast here — only after a successful update
+        toast.success("Preferences updated successfully!", {
+          style: {
+            borderRadius: "10px",
+            background: "#10b981",
+            color: "#fff",
+            fontWeight: "bold",
+            fontSize: "14px",
+            padding: "10px 16px",
+          },
+          icon: "✅",
+        });
       } else {
         console.error("Failed to update preferences");
+        toast.error("Failed to save preferences");
       }
     } catch (err) {
       console.error("Error saving preferences:", err);
+      toast.error("Something went wrong!");
     }
   };
 

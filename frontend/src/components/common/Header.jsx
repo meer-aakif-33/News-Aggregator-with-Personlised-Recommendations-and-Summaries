@@ -24,9 +24,9 @@ export default function Header({ onLogout }) {
 
   return (
     <nav
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
-      scrolled
-        ? "bg-white/50 backdrop-blur-md border-b border-white/50 shadow-lg" // more transparent
+    className={`fixed top-0 left-0 w-full z-50 transition-colors transition-shadow duration-300
+      ${scrolled
+        ? "bg-white/50 backdrop-blur-md border-b border-white/50 shadow-lg"
         : "bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-md"
       }`}
     >
