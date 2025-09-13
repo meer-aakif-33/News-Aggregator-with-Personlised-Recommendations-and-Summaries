@@ -1,4 +1,4 @@
-import {jwtDecode} from "jwt-decode"; // ✅ fixed import
+import { jwtDecode } from "jwt-decode"; // ✅ fixed import
 import './App.css';
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
@@ -9,7 +9,7 @@ import PreferencesPage from "./components/pages/PreferencesPage";
 import TrendingPage from "./components/pages/TrendingPage";
 import Header from "./components/common/Header";
 import LoginSignupPage from './components/pages/LoginPage';
-
+import ProtectedRoute from "./components/common/ProtectedRoute";
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,6 +52,11 @@ function App() {
     }
   }, [isAuthenticated, navigate, location.pathname]);
 
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    setIsAuthenticated(!!token); // always sync state with localStorage
+  }, []);
+
   return (
     <>
       {isAuthenticated && <Header onLogout={handleLogout} />}
@@ -60,30 +65,60 @@ function App() {
         <Route
           path="/"
           element={
-            (() => {
-              const token = localStorage.getItem("authToken");
-              const userId = localStorage.getItem("userId");
-              const hasPreferences = localStorage.getItem(`hasPreferences_${userId}`);
-
-              // console.log("==== Route / Check ====");
-              // console.log("Token:", token);
-              // console.log("UserId:", userId);
-              // console.log("Has Preferences:", hasPreferences);
-              // console.log("======================");
-
-              if (isAuthenticated) {
-                return !hasPreferences ? <Navigate to="/preferences" replace /> : <Navigate to="/mainNews" replace />;
-              } else {
-                return <LoginSignupPage setIsAuthenticated={setIsAuthenticated} />;
-              }
-            })()
+            isAuthenticated ? (
+              !localStorage.getItem(`hasPreferences_${localStorage.getItem("userId")}`)
+                ? <Navigate to="/preferences" replace />
+                : <Navigate to="/mainNews" replace />
+            ) : (
+              <LoginSignupPage setIsAuthenticated={setIsAuthenticated} />
+            )
           }
         />
-        <Route path="/preferences" element={isAuthenticated ? <PreferencesPage /> : <Navigate to="/" replace />} />
-        <Route path="/mainNews" element={isAuthenticated ? <MainNewsPage /> : <Navigate to="/" replace />} />
-        <Route path="/trending" element={isAuthenticated ? <TrendingPage /> : <Navigate to="/" replace />} />
-        <Route path="/profile" element={isAuthenticated ? <ProfilePage /> : <Navigate to="/" replace />} />
-        <Route path="/news/:id" element={isAuthenticated ? <NewsArticlePage /> : <Navigate to="/" replace />} />
+
+        <Route
+          path="/preferences"
+          element={
+            <ProtectedRoute>
+              <PreferencesPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/mainNews"
+          element={
+            <ProtectedRoute>
+              <MainNewsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/trending"
+          element={
+            <ProtectedRoute>
+              <TrendingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/news/:id"
+          element={
+            <ProtectedRoute>
+              <NewsArticlePage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );

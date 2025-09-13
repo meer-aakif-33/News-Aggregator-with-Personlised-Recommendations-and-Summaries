@@ -1,5 +1,8 @@
 // components/pages/LoginSignupPage.jsx
 import React, { useState, useEffect } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import { useNavigate } from "react-router-dom";
 
 
@@ -25,7 +28,7 @@ const handleSignup = async (event) => {
   event.preventDefault();
 
   if (!name || !email || !password) {
-    alert("All fields are required");
+    toast.error("All fields are required");
     return;
   }
 
@@ -47,7 +50,7 @@ const handleSignup = async (event) => {
     }
 
     if (!response.ok) {
-      alert(data.error || "Signup failed");
+      toast.error(data.error || "Signup failed");
       console.error("Signup failed:", data.error || data);
       return;
     }
@@ -84,18 +87,21 @@ const handleLogin = async (event) => {
       body: JSON.stringify({ email, password }),
     });
 
-    if (!response.ok) {
-      console.error("Login failed: HTTP", response.status);
-      return;
-    }
-
+    
     const data = await response.json();
     console.log("Server response:", data);
+    
+      if (!response.ok) {
+        toast.error(data.error || "User doesn't exist / Invalid credentials");
+        console.error("Login failed:", data.error || response.statusText);
+        return;
+      }
 
-    if (!data.name || !data.email) {
-      console.error("Missing user details in response:", data);
-      return;
-    }
+      if (!data.name || !data.email) {
+        toast.error("User data missing in response. Please try again.");
+        console.error("Missing user details in response:", data);
+        return;
+      }
 
     // Save to localStorage
     localStorage.setItem("authToken", data.token);
@@ -130,6 +136,8 @@ const handleLogin = async (event) => {
 };
   return (
     <div className="flex items-center justify-center min-h-screen px-4 py-6 bg-gradient-to-br from-blue-100 via-pink-100 to-purple-200">
+          <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+
       <div className="flex flex-col md:flex-row bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-5xl">
         
         {/* Left Side */}
