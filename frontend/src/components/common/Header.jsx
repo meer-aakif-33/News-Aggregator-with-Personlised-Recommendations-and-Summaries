@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Header({ onLogout }) {
   const [scrolled, setScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -22,13 +23,24 @@ export default function Header({ onLogout }) {
     { name: "Profile", path: "/profile" },
   ];
 
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    setTimeout(() => {
+      onLogout();
+    }, 600); // wait for animation before logging out
+  };
+
   return (
-    <nav
-    className={`fixed top-0 left-0 w-full z-50 transition-colors transition-shadow duration-300
-      ${scrolled
-        ? "bg-white/50 backdrop-blur-md border-b border-white/50 shadow-lg"
-        : "bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-md"
-      }`}
+    <motion.nav
+      initial={{ opacity: 1 }}
+      animate={{ opacity: isLoggingOut ? 0 : 1, y: isLoggingOut ? -20 : 0 }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
+      className={`fixed top-0 left-0 w-full z-50 transition-colors transition-shadow duration-300
+        ${
+          scrolled
+            ? "bg-white/50 backdrop-blur-md border-b border-white/50 shadow-lg"
+            : "bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-md"
+        }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
@@ -36,7 +48,7 @@ export default function Header({ onLogout }) {
           <Link
             to="/"
             className="text-2xl font-extrabold tracking-wide bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition"
-            onClick={() => setIsOpen(false)} // ✅ close mobile menu if open
+            onClick={() => setIsOpen(false)}
           >
             NewsApp
           </Link>
@@ -66,16 +78,17 @@ export default function Header({ onLogout }) {
               );
             })}
 
-            {/* Logout button (neutral, no highlight) */}
-            <li>
-              <button
-                onClick={onLogout}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg 
-                           transition shadow-md"
-              >
-                Logout
-              </button>
-            </li>
+          {/* Desktop Logout button */}
+          <li>
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-1 rounded-lg 
+                        transition shadow-md flex items-center gap-2 cursor-pointer"
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          </li>
           </ul>
 
           {/* Mobile Menu Button */}
@@ -88,7 +101,7 @@ export default function Header({ onLogout }) {
         </div>
       </div>
 
-      {/* Mobile Dropdown with Framer Motion */}
+      {/* Mobile Dropdown */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -118,15 +131,15 @@ export default function Header({ onLogout }) {
                 );
               })}
 
-              {/* Logout button (neutral, no highlight) */}
               <li>
                 <button
                   onClick={() => {
                     setIsOpen(false);
-                    onLogout();
+                    handleLogout();
                   }}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition w-full shadow-md"
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition w-full shadow-md flex items-center gap-2"
                 >
+                  <LogOut size={18} />
                   Logout
                 </button>
               </li>
@@ -134,6 +147,6 @@ export default function Header({ onLogout }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </nav>
+    </motion.nav>
   );
 }
