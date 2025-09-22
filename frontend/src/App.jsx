@@ -11,7 +11,7 @@ import Header from "./components/common/Header";
 import LoginSignupPage from './components/pages/LoginPage';
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import { Toaster } from "react-hot-toast";
-
+import Footer from "./components/common/Footer";
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -123,6 +123,8 @@ function App() {
           }
         />
       </Routes>
+        {isAuthenticated && <Footer/>}
+
     </>
   );
 }
